@@ -24,3 +24,6 @@ Flutter 공부
 구상한 클래스 구현
 
 추가 기능 구상
+
+플러터 기초 강의
+https://www.youtube.com/playlist?list=PLfLgtT94nNq1izG4R2WDN517iPX4WXH3C

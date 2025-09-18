@@ -1,1 +1,2 @@
-# mini-project
+# fucking-amazing-traveling-application
+

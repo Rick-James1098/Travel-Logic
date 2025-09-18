@@ -2,6 +2,9 @@
 
 It helps you manage travel plan easly
 
+마크다운 작성법
+https://gist.github.com/ihoneymon/652be052a0727ad59601
+
 
 https://www.notion.so/Travelogic-Planning-27252813d8cc80e09843f10efde7f8e5?source=copy_link
 

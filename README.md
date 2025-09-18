@@ -1,4 +1,4 @@
-# travel logic app
+# travelogic app
 
 It helps you manage travel plan easly
 

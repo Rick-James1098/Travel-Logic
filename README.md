@@ -1,2 +1,3 @@
-# fucking-amazing-traveling-application
+# travel logic app
 
+It helps you manage travel plan

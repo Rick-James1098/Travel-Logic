@@ -27,3 +27,6 @@ Flutter 공부
 
 플러터 기초 강의
 https://www.youtube.com/playlist?list=PLfLgtT94nNq1izG4R2WDN517iPX4WXH3C
+
+피그마 ai 기반 디자인
+https://www.figma.com/make/AN53TcnmxlmhMQTkwoVEVm/Travel-Logic-Main-Page?node-id=0-1&t=0yTq05nt6CBwwLGK-1

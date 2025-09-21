@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/trip_plan.dart';
+import '../models/trip_event.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_bottom_navigation.dart';
-import '../widgets/upcoming_trip_card.dart';
 import '../widgets/trip_edit_modal.dart';
 import 'travel_app.dart';
 
@@ -14,7 +14,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final PageController _pageController = PageController();
   int _currentNavIndex = 1; // Home is selected by default
   bool _isEditModalOpen = false;
   TripPlan? _editingTrip;
@@ -29,6 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43',
       description: '한라산 등반과 해변 여행을 즐기는 3박 4일 여행',
       estimatedBudget: 450000,
+      events: [
+        TripEvent(title: '한라산 등반', date: DateTime.now().add(const Duration(days: 6)), description: '성판악 코스'),
+        TripEvent(title: '해변에서 휴식', date: DateTime.now().add(const Duration(days: 7)), description: '협재 해수욕장'),
+      ],
     ),
     TripPlan(
       id: '2',
@@ -39,32 +42,22 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
       description: '해운대와 감천문화마을을 둘러보는 맛집 투어',
       estimatedBudget: 280000,
-    ),
-    TripPlan(
-      id: '3',
-      title: '경주 역사탐방',
-      destination: '경상북도 경주시',
-      startDate: DateTime.now().add(const Duration(days: 20)),
-      endDate: DateTime.now().add(const Duration(days: 22)),
-      imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
-      description: '불국사와 석굴암, 첨성대를 둘러보는 역사 여행',
-      estimatedBudget: 320000,
-    ),
-    TripPlan(
-      id: '4',
-      title: '강릉 바다 여행',
-      destination: '강원도 강릉시',
-      startDate: DateTime.now().add(const Duration(days: 30)),
-      endDate: DateTime.now().add(const Duration(days: 32)),
-      imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
-      description: '정동진 해변과 오죽헌을 즐기는 바다 여행',
-      estimatedBudget: 380000,
+      events: [
+        TripEvent(title: '돼지국밥 맛집', date: DateTime.now().add(const Duration(days: 12)), description: '쌍둥이돼지국밥'),
+        TripEvent(title: '감천문화마을', date: DateTime.now().add(const Duration(days: 13)), description: '사진 찍기 좋은 곳'),
+      ],
     ),
   ];
 
+  List<TripEvent> _getSortedUpcomingEvents() {
+    final allEvents = _upcomingTrips.expand((trip) => trip.events).toList();
+    allEvents.sort((a, b) => a.date.compareTo(b.date));
+    return allEvents;
+  }
+
   @override
   void dispose() {
-    _pageController.dispose();
+    // _pageController.dispose(); // No longer needed
     super.dispose();
   }
 
@@ -81,13 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  void _addNewTrip() {
-    setState(() {
-      _editingTrip = null;
-      _isEditModalOpen = true;
-    });
   }
 
   void _editTrip(TripPlan trip) {
@@ -161,28 +147,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _onTripCardTap(TripPlan trip) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => TravelApp(
-          currentNavIndex: 0,
-          tripPlan: trip,
-          onNavChange: (index) {
-            if (index == 1) {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  void _onTripCardLongPress(TripPlan trip) {
-    _editTrip(trip);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final upcomingEvents = _getSortedUpcomingEvents();
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       
@@ -198,13 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onHomeClick: _onHomeClick,
         onSettingsClick: _onSettingsClick,
       ),
-      
-      // Floating Action Button for adding new trip
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNewTrip,
-        child: const Icon(Icons.add),
-      ),
-      
+
       body: Stack(
         children: [
           SafeArea(
@@ -237,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '다가오는 여행을 확인해보세요',
+                              '다가오는 일정을 확인해보세요',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -247,12 +209,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       
-                      // Trip cards section
-                      if (_upcomingTrips.isNotEmpty) ...[
+                      // Upcoming events section
+                      if (upcomingEvents.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            '다가오는 여행',
+                            '다가오는 일정',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
@@ -262,41 +224,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 8),
                         
-                        // Horizontal trip cards
+                        // Vertical event list
                         Expanded(
-                          child: PageView.builder(
-                            controller: _pageController,
-                            itemCount: _upcomingTrips.length,
+                          child: ListView.builder(
+                            itemCount: upcomingEvents.length,
                             itemBuilder: (context, index) {
-                              final trip = _upcomingTrips[index];
-                              return UpcomingTripCard(
-                                trip: trip,
-                                onTap: () => _onTripCardTap(trip),
-                                onLongPress: () => _onTripCardLongPress(trip),
-                              );
+                              final event = upcomingEvents[index];
+                              return _UpcomingEventCard(event: event);
                             },
                           ),
                         ),
-                        
-                        // Page indicator
-                        if (_upcomingTrips.length > 1) ...[
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              _upcomingTrips.length,
-                              (index) => Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ] else ...[
                         // Empty state
                         Expanded(
@@ -305,13 +242,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.flight_takeoff,
+                                  Icons.event_busy,
                                   size: 64,
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  '예정된 여행이 없습��다',
+                                  '예정된 일정이 없습니다',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,
@@ -353,6 +290,44 @@ class _HomeScreenState extends State<HomeScreen> {
               onDelete: _editingTrip != null ? _handleDeleteTrip : null,
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _UpcomingEventCard extends StatelessWidget {
+  final TripEvent event;
+
+  const _UpcomingEventCard({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${event.date.year}년 ${event.date.month}월 ${event.date.day}일',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(event.description),
+          ],
+        ),
       ),
     );
   }

@@ -40,3 +40,7 @@ https://www.youtube.com/playlist?list=PLfLgtT94nNq1izG4R2WDN517iPX4WXH3C
 
 피그마 ai 기반 디자인
 https://www.figma.com/make/AN53TcnmxlmhMQTkwoVEVm/Travel-Logic-Main-Page?node-id=0-1&t=0yTq05nt6CBwwLGK-1
+
+2025/09/24
+
+  해외여행을 타깃으로 잡았으니 기록될 수 있는 현지 통화를 고려하여 환율 계산해서 총 경비를 원으로 표시해주는 기능을 추가하면 좋을거같음

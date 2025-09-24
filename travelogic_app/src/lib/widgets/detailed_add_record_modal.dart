@@ -203,13 +203,13 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
     }
 
     final record = TravelRecord(
-      id: '', // Will be set by parent
+      id: _isEditing ? widget.recordToEdit!.id : '',
       type: _selectedType,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       location: _locationController.text.trim(),
       time: timeString,
-      date: currentDate,
+      date: _isEditing ? widget.recordToEdit!.date : currentDate,
       amount: int.tryParse(_amountController.text) ?? 0,
       transportDetails: transportDetails,
       accommodationDetails: accommodationDetails,

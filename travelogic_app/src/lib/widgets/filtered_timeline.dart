@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:travel_record_app/models/tab_type.dart';
+import 'package:travel_record_app/models/tab_type.dart'; // 실제 경로에 맞게 수정
 
-import '../models/travel_record.dart';
+import '../models/travel_record.dart'; // 실제 경로에 맞게 수정
 import 'record_card.dart';
 import 'total_amount_footer.dart';
 
@@ -10,16 +10,21 @@ import 'total_amount_footer.dart';
 class FilteredTimeline extends StatelessWidget {
   final List<TravelRecord> records;
   final TabType? filterType;
+  final Function(TravelRecord) onRecordTap;      // ✨ 1. 탭 콜백 함수 추가
+  final Function(TravelRecord) onRecordDelete;   // ✨ 2. 삭제 콜백 함수 추가
 
   const FilteredTimeline({
     super.key,
     required this.records,
     this.filterType,
+    required this.onRecordTap,      // ✨ 3. 생성자에 콜백 함수를 필수로 받도록 수정
+    required this.onRecordDelete,
   });
 
+  // get filteredRecords, get groupedRecords 는 기존과 동일합니다.
   List<TravelRecord> get filteredRecords {
     if (filterType == null) return records;
-    
+
     switch (filterType!) {
       case TabType.all:
         return records;
@@ -34,7 +39,7 @@ class FilteredTimeline extends StatelessWidget {
 
   Map<String, List<TravelRecord>> get groupedRecords {
     final Map<String, List<TravelRecord>> grouped = {};
-    
+
     for (final record in filteredRecords) {
       if (!grouped.containsKey(record.date)) {
         grouped[record.date] = [];
@@ -42,7 +47,6 @@ class FilteredTimeline extends StatelessWidget {
       grouped[record.date]!.add(record);
     }
 
-    // Sort records within each date by time
     for (final dayRecords in grouped.values) {
       dayRecords.sort((a, b) => a.time.compareTo(b.time));
     }
@@ -57,19 +61,9 @@ class FilteredTimeline extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.travel_explore,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.travel_explore, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text(
-              '여행 기록이 없습니다',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
+            Text('여행 기록이 없습니다', style: TextStyle(fontSize: 16, color: Colors.grey)),
           ],
         ),
       );
@@ -84,7 +78,7 @@ class FilteredTimeline extends StatelessWidget {
             itemBuilder: (context, index) {
               final date = groupedRecords.keys.elementAt(index);
               final dayRecords = groupedRecords[date]!;
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -100,10 +94,15 @@ class FilteredTimeline extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Records for this date
-                  ...dayRecords.map((record) => RecordCard(record: record)),
-                  
+                  // ✨ 4. map 안에서 RecordCard를 생성할 때 콜백 함수들을 전달합니다.
+                  ...dayRecords.map((record) => RecordCard(
+                    record: record,
+                    onTap: () => onRecordTap(record),
+                    onDelete: () => onRecordDelete(record),
+                  )),
+
                   const SizedBox(height: 16),
                 ],
               );

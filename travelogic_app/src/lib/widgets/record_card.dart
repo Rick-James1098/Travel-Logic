@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-import '../models/travel_record.dart';
+import '../models/travel_record.dart'; // 실제 프로젝트의 모델 경로에 맞게 수정해주세요.
 import 'package:intl/intl.dart';
 
 class RecordCard extends StatelessWidget {
   final TravelRecord record;
+  final VoidCallback onTap;      // ✨ 1. 카드 클릭 시 호출될 콜백 함수
+  final VoidCallback onDelete;   // ✨ 2. 삭제 버튼 클릭 시 호출될 콜백 함수
 
   const RecordCard({
     super.key,
     required this.record,
+    required this.onTap,      // ✨ 3. 생성자에서 콜백 함수들을 필수로 받도록 수정
+    required this.onDelete,
   });
+
+  // _getTypeIcon, _getTypeColor, _buildTransportDetails,
+  // _buildAccommodationDetails, _buildDetailRow 메서드는 기존과 동일합니다.
+  // (아래에 전체 코드가 포함되어 있으니 복사해서 사용하시면 됩니다.)
 
   IconData _getTypeIcon() {
     switch (record.type) {
@@ -122,7 +130,7 @@ class RecordCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Timeline indicator
+          // Timeline indicator (기존과 동일)
           Column(
             children: [
               Container(
@@ -135,7 +143,7 @@ class RecordCard extends StatelessWidget {
               ),
               Container(
                 width: 2,
-                height: 80,
+                height: 80, // 이 부분은 카드 높이에 따라 동적으로 조절할 수 있습니다.
                 color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
               ),
             ],
@@ -144,112 +152,121 @@ class RecordCard extends StatelessWidget {
 
           // Content
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: typeColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Icon(
-                          _getTypeIcon(),
-                          color: typeColor,
-                          size: 16,
-                        ),
+            // ✨ 4. Stack을 사용해 카드 위에 삭제 버튼을 띄웁니다.
+            child: Stack(
+              children: [
+                // ✨ 5. InkWell로 감싸서 카드 전체에 탭 효과와 onTap 콜백을 적용합니다.
+                InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                        width: 1,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          record.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        record.time,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (record.location.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Row(
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.place,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        // Header (기존과 동일)
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: typeColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(_getTypeIcon(), color: typeColor, size: 16),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                record.title,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Text(
+                              record.time,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          record.location,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+
+                        // Location (기존과 동일)
+                        if (record.location.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.place, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 4),
+                              Text(
+                                record.location,
+                                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
+                            ],
                           ),
-                        ),
+                        ],
+
+                        // Description (기존과 동일)
+                        if (record.description.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            record.description,
+                            style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4),
+                          ),
+                        ],
+
+                        // Transport Details (기존과 동일)
+                        if (record.type == TravelRecordType.transport && record.transportDetails != null) ...[
+                          const SizedBox(height: 8),
+                          _buildTransportDetails(context, record.transportDetails!),
+                        ],
+
+                        // Accommodation Details (기존과 동일)
+                        if (record.type == TravelRecordType.destination && record.accommodationDetails != null) ...[
+                          const SizedBox(height: 8),
+                          _buildAccommodationDetails(context, record.accommodationDetails!),
+                        ],
+
+                        // Amount (기존과 동일)
+                        if (record.amount > 0) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '${NumberFormat('#,###').format(record.amount)}원',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+
+                        // ✨ 삭제 버튼 공간 확보를 위한 여백 추가
+                        const SizedBox(height: 24),
                       ],
                     ),
-                  ],
+                  ),
+                ),
 
-                  if (record.description.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      record.description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-
-                  // Transport Details
-                  if (record.type == TravelRecordType.transport && record.transportDetails != null) ...[
-                    const SizedBox(height: 8),
-                    _buildTransportDetails(context, record.transportDetails!),
-                  ],
-
-                  // Accommodation Details
-                  if (record.type == TravelRecordType.destination && record.accommodationDetails != null) ...[
-                    const SizedBox(height: 8),
-                    _buildAccommodationDetails(context, record.accommodationDetails!),
-                  ],
-
-                  if (record.amount > 0) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      '${NumberFormat('#,###').format(record.amount)}원',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                // ✨ 6. Positioned 위젯으로 삭제 버튼을 오른쪽 아래에 배치합니다.
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: IconButton(
+                    icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error.withOpacity(0.7)),
+                    onPressed: onDelete,
+                    tooltip: '삭제',
+                  ),
+                ),
+              ],
             ),
           ),
         ],

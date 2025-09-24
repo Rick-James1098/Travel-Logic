@@ -4,11 +4,13 @@ import '../models/travel_record.dart';
 class DetailedAddRecordModal extends StatefulWidget {
   final VoidCallback onClose;
   final Function(TravelRecord) onSave;
+  final TravelRecord? recordToEdit;
 
   const DetailedAddRecordModal({
     super.key,
     required this.onClose,
     required this.onSave,
+    this.recordToEdit,
   });
 
   @override
@@ -47,6 +49,92 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
   final _addressController = TextEditingController();
   DateTime? _checkInDate;
   DateTime? _checkOutDate;
+
+  late final bool _isEditing;
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.recordToEdit != null;
+
+    // 수정 모드일 경우, 폼 필드를 기존 데이터로 채우는 로직
+    if (_isEditing) {
+      final record = widget.recordToEdit!;
+
+      // --- 1. 공통 정보 채우기 ---
+      _selectedType = record.type;
+      _titleController.text = record.title;
+      _descriptionController.text = record.description;
+      _locationController.text = record.location;
+      _amountController.text = record.amount.toString();
+
+      // 시간 파싱 (HH:mm 형식)
+      if (record.time.isNotEmpty) {
+        final timeParts = record.time.split(':');
+        if (timeParts.length == 2) {
+          _selectedTime = TimeOfDay(
+            hour: int.tryParse(timeParts[0]) ?? 0,
+            minute: int.tryParse(timeParts[1]) ?? 0,
+          );
+        }
+      }
+
+      // --- 2. 교통수단 상세 정보 채우기 ---
+      if (record.transportDetails != null) {
+        final details = record.transportDetails!;
+        _selectedTransportType = details.transportType;
+
+        // 항공편
+        _airlineController.text = details.airline ?? '';
+        _flightNumberController.text = details.flightNumber ?? '';
+        _reservationNumberController.text = details.reservationNumber ?? '';
+
+        // 렌트카
+        _rentalCompanyController.text = details.rentalCompany ?? '';
+        _vehicleController.text = details.vehicle ?? '';
+        _rentalPeriodController.text = details.rentalPeriod ?? '';
+        _voucherController.text = details.voucher ?? '';
+        _rentalDetailsController.text = details.rentalDetails ?? '';
+
+        // 기차/버스
+        _trainNameController.text = details.trainName ?? '';
+        _busNameController.text = details.busName ?? '';
+        _departureController.text = details.departure ?? '';
+        _arrivalController.text = details.arrival ?? '';
+        _seatController.text = details.seat ?? '';
+
+        // 출발/도착 시간 파싱
+        if (details.departureTime != null) {
+          final timeParts = details.departureTime!.split(':');
+          if (timeParts.length == 2) {
+            _departureTime = TimeOfDay(hour: int.tryParse(timeParts[0]) ?? 0, minute: int.tryParse(timeParts[1]) ?? 0);
+          }
+        }
+        if (details.arrivalTime != null) {
+          final timeParts = details.arrivalTime!.split(':');
+          if (timeParts.length == 2) {
+            _arrivalTime = TimeOfDay(hour: int.tryParse(timeParts[0]) ?? 0, minute: int.tryParse(timeParts[1]) ?? 0);
+          }
+        }
+      }
+
+      // --- 3. 숙소 상세 정보 채우기 ---
+      if (record.accommodationDetails != null) {
+        final details = record.accommodationDetails!;
+        _bookingSiteController.text = details.bookingSite ?? '';
+        _bookingSiteLinkController.text = details.bookingSiteLink ?? '';
+        _addressController.text = details.address ?? '';
+
+        // 체크인/체크아웃 날짜 파싱
+        if (details.checkIn != null) {
+          _checkInDate = DateTime.tryParse(details.checkIn!);
+        }
+        if (details.checkOut != null) {
+          _checkOutDate = DateTime.tryParse(details.checkOut!);
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -200,272 +288,329 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
     return Container(
       color: Colors.black54,
       child: Center(
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                const Text(
-                  '새 기록 추가',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+        child: Material(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Text(
+                    _isEditing ? '기록 수정' : '새 기록 추가',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Type Selection
-                const Text(
-                  '기록 유형',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: TravelRecordType.values.map((type) {
-                    final isSelected = _selectedType == type;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedType = type;
-                          });
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.surfaceVariant,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                _getTypeIcon(type),
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.onPrimary
-                                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                                size: 20,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                type.label,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.onPrimary
-                                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
+                  const SizedBox(height: 24),
+          
+                  if (!_isEditing) ...[
+                    const Text(
+                      '기록 유형',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: TravelRecordType.values.map((type) {
+                        final isSelected = _selectedType == type;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() => _selectedType = type);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline.withOpacity(0.2),
                                 ),
                               ),
-                            ],
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    _getTypeIcon(type),
+                                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    type.label,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-
-                // Transport Type Selection
-                if (_selectedType == TravelRecordType.transport) ...[
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+          
+                  // Type Selection
                   const Text(
-                    '교통수단 유형',
+                    '기록 유형',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  DropdownButtonFormField<TransportType>(
-                    value: _selectedTransportType,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                    ),
-                    items: TransportType.values.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Row(
-                          children: [
-                            Icon(_getTransportIcon(type), size: 16),
-                            const SizedBox(width: 8),
-                            Text(type.label),
-                          ],
+                  Row(
+                    children: TravelRecordType.values.map((type) {
+                      final isSelected = _selectedType == type;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedType = type;
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.surfaceVariant,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  _getTypeIcon(type),
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                                  size: 20,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  type.label,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.onPrimary
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedTransportType = value;
-                        });
-                      }
-                    },
+                  ),
+                  const SizedBox(height: 24),
+          
+                  // Transport Type Selection
+                  if (_selectedType == TravelRecordType.transport) ...[
+                    const Text(
+                      '교통수단 유형',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<TransportType>(
+                      value: _selectedTransportType,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
+                      items: TransportType.values.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Row(
+                            children: [
+                              Icon(_getTransportIcon(type), size: 16),
+                              const SizedBox(width: 8),
+                              Text(type.label),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedTransportType = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+          
+                  // Title
+                  const Text(
+                    '제목 *',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      hintText: '예: 경복궁 방문',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 16),
-                ],
-
-                // Title
-                const Text(
-                  '제목 *',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    hintText: '예: 경복궁 방문',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Time
-                const Text(
-                  '시간 *',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _selectTime,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
-                      ),
-                      borderRadius: BorderRadius.circular(4),
+          
+                  // Time
+                  const Text(
+                    '시간 *',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: _selectTime,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _selectedTime != null
-                              ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-                              : '시간 선택',
-                          style: TextStyle(
-                            color: _selectedTime != null
-                                ? Theme.of(context).colorScheme.onSurface
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _selectedTime != null
+                                ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+                                : '시간 선택',
+                            style: TextStyle(
+                              color: _selectedTime != null
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+          
+                  // Location
+                  const Text(
+                    '위치',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(
+                      hintText: '예: 서울특별시 종로구',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+          
+                  // Amount
+                  const Text(
+                    '비용',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+          
+                  // Type-specific fields
+                  if (_selectedType == TravelRecordType.transport)
+                    _buildTransportFields(),
+          
+                  if (_selectedType == TravelRecordType.destination)
+                    _buildAccommodationFields(),
+          
+                  // if (_selectedType == TravelRecordType.activity)
+                  //   _buildActivityFields(),
+          
+                  // Description
+                  const Text(
+                    '메모',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: '여행 기록에 대한 메모를 입력하세요...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+          
+                  // Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: widget.onClose,
+                          child: const Text('취소'),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Location
-                const Text(
-                  '위치',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _locationController,
-                  decoration: const InputDecoration(
-                    hintText: '예: 서울특별시 종로구',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Amount
-                const Text(
-                  '금액 (원)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    hintText: '예: 50000',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Type-specific fields
-                if (_selectedType == TravelRecordType.transport)
-                  _buildTransportFields(),
-
-                if (_selectedType == TravelRecordType.destination)
-                  _buildAccommodationFields(),
-
-                // Description
-                const Text(
-                  '메모',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: '여행 기록에 대한 메모를 입력하세요...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: widget.onClose,
-                        child: const Text('취소'),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _titleController.text.trim().isNotEmpty && _selectedTime != null
-                            ? _handleSave
-                            : null,
-                        child: const Text('저장'),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          onPressed: _titleController.text.trim().isNotEmpty && _selectedTime != null
+                              ? _handleSave
+                              : null,
+                          child: Text(_isEditing ? '수정 완료' : '저장'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -813,6 +958,31 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
       ],
     );
   }
+
+  //
+  // Widget _buildActivityFields() {
+  //   return Column(
+  //     crossAxisAlignment : CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         '내용',
+  //         style: TextStyle(
+  //           fontSize: 16,
+  //           fontWeight: FontWeight.w500,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 16,),
+  //       TextField(
+  //         controller: _descriptionController,
+  //         maxLines: 3,
+  //         decoration: const InputDecoration(
+  //           hintText: '어떤 활동을 하셨나요?',
+  //           border: OutlineInputBorder(),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   IconData _getTypeIcon(TravelRecordType type) {
     switch (type) {

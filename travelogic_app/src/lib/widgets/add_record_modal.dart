@@ -235,7 +235,7 @@ class _AddRecordModalState extends State<AddRecordModal> {
 
               // Amount
               const Text(
-                '금액 (원)',
+                '비용',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -246,7 +246,6 @@ class _AddRecordModalState extends State<AddRecordModal> {
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  hintText: '예: 50000',
                   border: OutlineInputBorder(),
                 ),
               ),

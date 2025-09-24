@@ -102,6 +102,8 @@ class _TripEditModalState extends State<TripEditModal> {
       description: _descriptionController.text.trim(),
       estimatedBudget: int.tryParse(_budgetController.text) ?? 0,
       isCompleted: widget.trip?.isCompleted ?? false,
+      events: widget.trip?.events ?? [],
+      records: widget.trip?.records ?? [],
     );
 
     widget.onSave(trip);

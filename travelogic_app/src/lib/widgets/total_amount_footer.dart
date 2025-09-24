@@ -51,7 +51,7 @@ class TotalAmountFooter extends StatelessWidget {
       ),
       child: SafeArea(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Text(
               '$filterLabel 총 지출',
@@ -61,7 +61,7 @@ class TotalAmountFooter extends StatelessWidget {
               ),
             ),
             Text(
-              '${NumberFormat('#,###').format(totalAmount)}원',
+              '${NumberFormat(' #,###').format(totalAmount)}원',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

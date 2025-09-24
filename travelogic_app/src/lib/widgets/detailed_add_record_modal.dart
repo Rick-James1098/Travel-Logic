@@ -360,69 +360,7 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                     ),
                     const SizedBox(height: 24),
                   ],
-          
-                  // Type Selection
-                  const Text(
-                    '기록 유형',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: TravelRecordType.values.map((type) {
-                      final isSelected = _selectedType == type;
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedType = type;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.surfaceVariant,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  _getTypeIcon(type),
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.onPrimary
-                                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                                  size: 20,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  type.label,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.onPrimary
-                                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-          
+
                   // Transport Type Selection
                   if (_selectedType == TravelRecordType.transport) ...[
                     const Text(
@@ -460,7 +398,7 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                     ),
                     const SizedBox(height: 16),
                   ],
-          
+
                   // Title
                   const Text(
                     '제목 *',
@@ -478,7 +416,7 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                     ),
                   ),
                   const SizedBox(height: 16),
-          
+
                   // Time
                   const Text(
                     '시간 *',

@@ -35,7 +35,7 @@ class HomeHeader extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          
+
           // Action buttons
           Row(
             children: [
@@ -78,7 +78,7 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              
+
               // Profile button
               GestureDetector(
                 onTap: onProfileClick,

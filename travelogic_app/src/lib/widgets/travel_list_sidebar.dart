@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/trip_plan.dart';
 
 class TravelListSidebar extends StatelessWidget {
   final VoidCallback onClose;
-  final List<TripPlan> trips;
-  final TripPlan? activeTrip;
+  final List<TripPlan> tripPlans;
   final Function(TripPlan) onTripSelected;
+  final String? activeTripId;
 
   const TravelListSidebar({
     super.key,
     required this.onClose,
-    required this.trips,
-    this.activeTrip,
+    required this.tripPlans,
     required this.onTripSelected,
+    this.activeTripId,
   });
 
   @override
@@ -76,13 +75,14 @@ class TravelListSidebar extends StatelessWidget {
                     Expanded(
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: trips.length,
+                        itemCount: tripPlans.length,
                         itemBuilder: (context, index) {
-                          final trip = trips[index];
-                          final bool isActive = activeTrip?.id == trip.id;
+                          final trip = tripPlans[index];
+                          final bool isActive = trip.id == activeTripId;
                           return _buildTravelItem(
                             context,
                             trip,
+                            Icons.location_city, // Placeholder icon
                             isActive,
                           );
                         },
@@ -115,20 +115,15 @@ class TravelListSidebar extends StatelessWidget {
   }
 
   Widget _buildTravelItem(
-    BuildContext context,
-    TripPlan trip,
-    bool isActive,
-  ) {
-    final DateFormat formatter = DateFormat('yyyy.MM.dd');
-    final String dateRange = '${formatter.format(trip.startDate)} - ${formatter.format(trip.endDate)}';
-    
-    // A simple way to get an icon from the destination
-    IconData icon = Icons.location_city;
-    if (trip.destination.contains('해변') || trip.destination.contains('바다')) {
-      icon = Icons.beach_access;
-    } else if (trip.destination.contains('산') || trip.destination.contains('제주')) {
-      icon = Icons.landscape;
-    }
+      BuildContext context,
+      TripPlan trip,
+      IconData icon,
+      bool isActive,
+      ) {
+
+    final String startDate = '${trip.startDate.year}.${trip.startDate.month.toString().padLeft(2, '0')}.${trip.startDate.day.toString().padLeft(2, '0')}';
+    final String endDate = '${trip.endDate.year}.${trip.endDate.month.toString().padLeft(2, '0')}.${trip.endDate.day.toString().padLeft(2, '0')}';
+    final String dateRange = '$startDate - $endDate';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -167,7 +162,6 @@ class TravelListSidebar extends StatelessWidget {
         ),
         onTap: () {
           onTripSelected(trip);
-          onClose();
         },
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

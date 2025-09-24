@@ -18,8 +18,8 @@ class RecordCard extends StatelessWidget {
   // _buildAccommodationDetails, _buildDetailRow 메서드는 기존과 동일합니다.
   // (아래에 전체 코드가 포함되어 있으니 복사해서 사용하시면 됩니다.)
 
-  IconData _getTypeIcon() {
-    switch (record.type) {
+  IconData _getTypeIcon(TravelRecordType type) {
+    switch (type) {
       case TravelRecordType.destination:
         return Icons.location_on;
       case TravelRecordType.transport:
@@ -181,7 +181,7 @@ class RecordCard extends StatelessWidget {
                                 color: typeColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Icon(_getTypeIcon(), color: typeColor, size: 16),
+                              child: Icon(_getTypeIcon(record.type), color: typeColor, size: 16),
                             ),
                             const SizedBox(width: 8),
                             Expanded(

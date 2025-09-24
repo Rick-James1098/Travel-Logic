@@ -1,7 +1,7 @@
 enum TravelRecordType {
-  destination('destination', '숙소'),
-  transport('transport', '교통수단'),
-  activity('activity', '액티비티');
+  destination('destination', '장소'),
+  transport('transport', '교통'),
+  activity('activity', '활동');
 
   const TravelRecordType(this.value, this.label);
   final String value;

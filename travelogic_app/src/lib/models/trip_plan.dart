@@ -1,3 +1,4 @@
+import 'travel_record.dart';
 import 'trip_event.dart';
 
 class TripPlan {
@@ -11,6 +12,7 @@ class TripPlan {
   final int estimatedBudget;
   final bool isCompleted;
   final List<TripEvent> events;
+  final List<TravelRecord> records;
 
   TripPlan({
     required this.id,
@@ -23,6 +25,7 @@ class TripPlan {
     required this.estimatedBudget,
     this.isCompleted = false,
     this.events = const [],
+    this.records = const [],
   });
 
   TripPlan copyWith({
@@ -36,6 +39,7 @@ class TripPlan {
     int? estimatedBudget,
     bool? isCompleted,
     List<TripEvent>? events,
+    List<TravelRecord>? records,
   }) {
     return TripPlan(
       id: id ?? this.id,
@@ -48,6 +52,7 @@ class TripPlan {
       estimatedBudget: estimatedBudget ?? this.estimatedBudget,
       isCompleted: isCompleted ?? this.isCompleted,
       events: events ?? this.events,
+      records: records ?? this.records,
     );
   }
 

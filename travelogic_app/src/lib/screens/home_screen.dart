@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/travel_record.dart';
 import '../models/trip_plan.dart';
 import '../models/trip_event.dart';
 import '../widgets/home_header.dart';
@@ -17,6 +18,15 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 1; // Home is selected by default
   bool _isEditModalOpen = false;
   TripPlan? _editingTrip;
+  TripPlan? _activeTrip;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_upcomingTrips.isNotEmpty) {
+      _activeTrip = _upcomingTrips.first;
+    }
+  }
 
   List<TripPlan> _upcomingTrips = [
     TripPlan(
@@ -32,6 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
         TripEvent(title: '한라산 등반', date: DateTime.now().add(const Duration(days: 6)), description: '성판악 코스'),
         TripEvent(title: '해변에서 휴식', date: DateTime.now().add(const Duration(days: 7)), description: '협재 해수욕장'),
       ],
+      records: [
+        TravelRecord(id: 'rec1', type: TravelRecordType.transport, title: '흑돼지 전문', description: '제주 흑돼지 맛집에서 저녁 식사', location: '서귀포시', time: '19:00', date: '2025-09-29', amount: 85000,),
+        TravelRecord(id: 'rec2', type: TravelRecordType.destination, title: '오션뷰 호텔', description: '해변가에 위치한 호텔에서 1박', location: '제주시', time: '15:00', date: '2025-09-29', amount: 220000,),
+      ]
     ),
     TripPlan(
       id: '2',
@@ -46,6 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
         TripEvent(title: '돼지국밥 맛집', date: DateTime.now().add(const Duration(days: 12)), description: '쌍둥이돼지국밥'),
         TripEvent(title: '감천문화마을', date: DateTime.now().add(const Duration(days: 13)), description: '사진 찍기 좋은 곳'),
       ],
+      records: [
+        TravelRecord(id: 'rec3', type: TravelRecordType.destination, title: '돼지국밥', description: '유명한 돼지국밥집 방문', location: '부산진구', time: '12:30', date: '2025-10-06', amount: 12000,),
+        TravelRecord(id: 'rec4', type: TravelRecordType.activity, title: '해운대 해수욕장', description: '해변 산책 및 구경', location: '해운대구', time: '16:00', date: '2025-10-06', amount: 0,),
+        TravelRecord(id: 'rec5', type: TravelRecordType.transport, title: '씨앗호떡', description: '남포동 명물 씨앗호떡', location: '중구 남포동', time: '18:00', date: '2025-10-06', amount: 2000,),
+      ]
     ),
   ];
 
@@ -61,28 +80,61 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _navigateToMyTravel() {
-    Navigator.of(context).push(
+  void _handleTripSelected(TripPlan trip) {
+    setState(() {
+      _activeTrip = trip;
+    });
+    // When a trip is selected from the sidebar, we pop the current
+    // TravelApp screen and push a new one for the selected trip.
+    Navigator.of(context).pop(); // Pop the current TravelApp
+    _navigateToMyTravel(selectedTrip: trip); // Push new one
+  }
+
+  void _navigateToMyTravel({TripPlan? selectedTrip}) async { // Add async
+    final tripToShow = selectedTrip ?? _activeTrip;
+    if (tripToShow == null) {
+      // Handle case where there are no trips
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('표시할 여행 계획이 없습니다.')),
+      );
+      return;
+    }
+
+    // Await the result from TravelApp
+    final updatedRecords = await Navigator.of(context).push<List<TravelRecord>>(
       MaterialPageRoute(
         builder: (context) => TravelApp(
-          trips: _upcomingTrips,
           currentNavIndex: 0,
-          onNavChange: (index) {
-            if (index == 1) {
-              Navigator.of(context).pop();
-            }
-          },
+          tripPlans: _upcomingTrips,
+          tripPlan: tripToShow,
+          activeTripId: tripToShow.id,
+          onTripSelected: _handleTripSelected,
         ),
       ),
     );
+
+    // If TravelApp returned updated records, update the master list
+    if (updatedRecords != null) {
+      setState(() {
+        final tripIndex = _upcomingTrips.indexWhere((t) => t.id == tripToShow.id);
+        if (tripIndex != -1) {
+          // Use copyWith to create a new TripPlan object with the updated records
+          _upcomingTrips[tripIndex] = _upcomingTrips[tripIndex].copyWith(records: updatedRecords);
+          // Also update the active trip reference if it's the one being edited
+          if (_activeTrip?.id == tripToShow.id) {
+            _activeTrip = _upcomingTrips[tripIndex];
+          }
+        }
+      });
+    }
   }
 
-  /*void _editTrip(TripPlan trip) {
+  void _editTrip(TripPlan trip) {
     setState(() {
       _editingTrip = trip;
       _isEditModalOpen = true;
     });
-  }*/
+  }
 
   void _handleSaveTrip(TripPlan trip) {
     setState(() {
@@ -129,9 +181,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onProfileClick() {
-    setState(() {
-      _currentNavIndex = 3;
-    });
     // TODO: Navigate to profile page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -142,9 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNotificationClick() {
-    setState(() {
-      _currentNavIndex = 4;
-    });
     // TODO: Navigate to notifications page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -160,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      
+
       // Bottom Navigation
       bottomNavigationBar: HomeBottomNavigation(
         currentIndex: _currentNavIndex,
@@ -184,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onProfileClick: _onProfileClick,
                   onNotificationClick: _onNotificationClick,
                 ),
-                
+
                 // Main content
                 Expanded(
                   child: Column(
@@ -215,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      
+
                       // Upcoming events section
                       if (upcomingEvents.isNotEmpty) ...[
                         Padding(
@@ -230,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        
+
                         // Vertical event list
                         Expanded(
                           child: ListView.builder(
@@ -275,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
-                      
+
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -283,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          
+
           // Edit Modal
           if (_isEditModalOpen)
             TripEditModal(

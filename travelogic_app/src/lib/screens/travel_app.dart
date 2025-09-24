@@ -8,20 +8,24 @@ import '../widgets/floating_action_button.dart';
 import '../widgets/detailed_add_record_modal.dart';
 import '../widgets/travel_list_sidebar.dart';
 import '../widgets/travel_top_tabs.dart';
-import '../widgets/RecordDetailPage.dart';
-import '../models/tab_type.dart';
+// import '../widgets/RecordDetailPage.dart'; // 더 이상 사용하지 않음
+import '../widgets/RecordDetailPage.dart'; // 새로 만든 상세 정보 모달 임포트
+import 'package:travel_record_app/models/tab_type.dart';
 
 class TravelApp extends StatefulWidget {
   final int currentNavIndex;
   final TripPlan? tripPlan;
-  final Function(int)? onNavChange;
+  final List<TripPlan> tripPlans;
+  final String? activeTripId;
+  final Function(TripPlan)? onTripSelected;
 
   const TravelApp({
     super.key,
     this.currentNavIndex = 0,
     this.tripPlan,
-    required this.trips,
-    this.onNavChange,
+    required this.tripPlans,
+    this.activeTripId,
+    this.onTripSelected,
   });
 
   @override
@@ -34,67 +38,52 @@ class _TravelAppState extends State<TravelApp> {
   bool _isSidebarOpen = false;
   bool _isSettingsOpen = false;
   late int _currentNavIndex;
-  late List<TravelRecord> _displayedRecords;
+  late List<TravelRecord> _records;
 
   @override
   void initState() {
     super.initState();
     _currentNavIndex = widget.currentNavIndex;
-    _displayedRecords = _getRecordsForTrip();
+    _records = List<TravelRecord>.from(widget.tripPlan?.records ?? []);
   }
 
-  List<TravelRecord> _getRecordsForTrip() {
-    if (widget.tripPlan != null) {
-      return widget.tripPlan!.events.map((event) {
-        return TravelRecord(
-          id: event.title + event.date.toIso8601String(), // Simple unique ID
-          type: TravelRecordType.activity, // Default type
-          title: event.title,
-          description: event.description,
-          location: widget.tripPlan!.destination, // Use trip destination
-          time: DateFormat('HH:mm').format(event.date),
-          date: DateFormat('yyyy-MM-dd').format(event.date),
-          amount: 0, // No amount in TripEvent
-        );
-      }).toList();
-    } else {
-      // Fallback sample data if no trip is selected
-      return [
-        TravelRecord(id: '1', type: TravelRecordType.destination, title: '경복궁 방문', description: '조선 왕조의 정궁인 경복궁을 둘러보며 한국의 전통 문화를 체험했습니다. 근정전과 경회루가 특히 인상적이었어요.', location: '서울특별시 종로구', time: '09:30', date: '2025-01-19', amount: 3000,),
-        TravelRecord(id: '2', type: TravelRecordType.transport, title: '지하철 3호선', description: '경복궁역에서 안국역까지 지하철을 이용했습니다.', location: '경복궁역 → 안국역', time: '11:00', date: '2025-01-19', amount: 1600,),
-        TravelRecord(id: '3', type: TravelRecordType.activity, title: '북촌 한옥마을 탐방', description: '전통 한옥들이 잘 보존된 북촌 한옥마을을 걸으며 사진을 찍었습니다. 좁은 골목길 사이로 보이는 한옥들이 아름다웠어요.', location: '서울특별시 종로구 북촌로', time: '11:30', date: '2025-01-19', amount: 0,),
-        TravelRecord(id: '4', type: TravelRecordType.destination, title: '인사동 쇼핑', description: '전통 공예품과 차를 파는 상점들을 둘러보며 기념품을 구입했습니다.', location: '서울특별시 종로구 인사동', time: '14:00', date: '2025-01-19', amount: 25000,),
-      ];
-    }
-  }
+  
 
   void _handleAddRecord(TravelRecord record) {
     setState(() {
-      _displayedRecords.add(record.copyWith(id: DateTime.now().millisecondsSinceEpoch.toString()));
+      _records.add(record.copyWith(id: DateTime.now().millisecondsSinceEpoch.toString()));
     });
   }
 
   void _handleUpdateRecord(TravelRecord updatedRecord) {
     setState(() {
-      final index = _displayedRecords.indexWhere((r) => r.id == updatedRecord.id);
+
+      final index = _records.indexWhere((r) => r.id == updatedRecord.id);
+
       if (index != -1) {
-        _displayedRecords[index] = updatedRecord;
+        _records[index] = updatedRecord;
       }
     });
   }
 
-  void _handleRecordTap(TravelRecord record) async {
-    final updatedRecord = await Navigator.push<TravelRecord>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecordDetailPage(record: record),
-      ),
+  // --- ⬇️ 이 부분이 수정되었습니다 ⬇️ ---
+  // 레코드 카드를 탭했을 때, 페이지 이동 대신 상세 정보 모달을 띄웁니다.
+  void _handleRecordTap(TravelRecord record) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // 이전에 만든 RecordDetailModal 위젯을 여기서 사용합니다.
+        return RecordDetailModal(
+          initialRecord: record,
+          onClose: () => Navigator.of(context).pop(),
+          // 모달 안에서 수정이 일어나면, _handleUpdateRecord 함수를 호출해
+          // 메인 리스트의 데이터를 실시간으로 업데이트합니다.
+          onRecordUpdated: _handleUpdateRecord,
+        );
+      },
     );
-
-    if (updatedRecord != null) {
-      _handleUpdateRecord(updatedRecord);
-    }
   }
+  // --- ⬆️ 여기까지 수정되었습니다 ⬆️ ---
 
   void _handleRecordDelete(TravelRecord recordToDelete) {
     showDialog(
@@ -111,7 +100,7 @@ class _TravelAppState extends State<TravelApp> {
             child: const Text('삭제', style: TextStyle(color: Colors.red)),
             onPressed: () {
               setState(() {
-                _displayedRecords.removeWhere((record) => record.id == recordToDelete.id);
+                _records.removeWhere((record) => record.id == recordToDelete.id);
               });
               Navigator.of(ctx).pop();
             },
@@ -148,10 +137,7 @@ class _TravelAppState extends State<TravelApp> {
   }
 
   void _onHomeClick() {
-    setState(() {
-      _currentNavIndex = 1;
-    });
-    widget.onNavChange?.call(1);
+    Navigator.of(context).pop(_records);
   }
 
   void _onSettingsClick() {
@@ -162,20 +148,6 @@ class _TravelAppState extends State<TravelApp> {
       const SnackBar(
         content: Text('설정 페이지는 곧 업데이트될 예정입니다.'),
         duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _handleTripSelected(TripPlan trip) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TravelApp(
-          trips: widget.trips,
-          tripPlan: trip,
-          onNavChange: widget.onNavChange,
-          currentNavIndex: widget.currentNavIndex,
-        ),
       ),
     );
   }
@@ -235,13 +207,39 @@ class _TravelAppState extends State<TravelApp> {
 
                 // Content
                 Expanded(
-                  child: FilteredTimeline(
-                    records: _records,
-                    filterType: _activeTab == TabType.all ? null : _activeTab,
-                    // ✨ 3. 생성한 핸들러 함수들을 FilteredTimeline 위젯에 전달
-                    onRecordTap: _handleRecordTap,
-                    onRecordDelete: _handleRecordDelete,
-                  ),
+                  child: _records.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '새로운 여행을 계획해보세요!',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _isAddModalOpen = true;
+                                  });
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text('새 여행 기록하기'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : FilteredTimeline(
+                          records: _records,
+                          filterType: _activeTab == TabType.all ? null : _activeTab,
+                          // 수정된 _handleRecordTap 함수를 FilteredTimeline 위젯에 전달합니다.
+                          onRecordTap: _handleRecordTap,
+                          onRecordDelete: _handleRecordDelete,
+                        ),
                 ),
               ],
             ),
@@ -291,10 +289,16 @@ class _TravelAppState extends State<TravelApp> {
           // Sidebar
           if (_isSidebarOpen)
             TravelListSidebar(
+              tripPlans: widget.tripPlans, // Pass trip plans
+              activeTripId: widget.activeTripId,
+              onTripSelected: (trip) {
+                // When a trip is selected, close the sidebar and call the callback
+                setState(() {
+                  _isSidebarOpen = false;
+                });
+                widget.onTripSelected?.call(trip);
+              },
               onClose: () => setState(() => _isSidebarOpen = false),
-              trips: widget.trips,
-              activeTrip: widget.tripPlan,
-              onTripSelected: _handleTripSelected,
             ),
         ],
       ),

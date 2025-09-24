@@ -65,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => TravelApp(
+          trips: _upcomingTrips,
           currentNavIndex: 0,
           onNavChange: (index) {
             if (index == 1) {

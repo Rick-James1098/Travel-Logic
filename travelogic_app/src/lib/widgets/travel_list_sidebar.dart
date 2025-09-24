@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../models/trip_plan.dart';
 
 class TravelListSidebar extends StatelessWidget {
   final VoidCallback onClose;
+  final List<TripPlan> trips;
+  final TripPlan? activeTrip;
+  final Function(TripPlan) onTripSelected;
 
   const TravelListSidebar({
     super.key,
     required this.onClose,
+    required this.trips,
+    this.activeTrip,
+    required this.onTripSelected,
   });
 
   @override
@@ -66,31 +74,18 @@ class TravelListSidebar extends StatelessWidget {
 
                     // Travel List
                     Expanded(
-                      child: ListView(
+                      child: ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        children: [
-                          _buildTravelItem(
+                        itemCount: trips.length,
+                        itemBuilder: (context, index) {
+                          final trip = trips[index];
+                          final bool isActive = activeTrip?.id == trip.id;
+                          return _buildTravelItem(
                             context,
-                            '서울 여행',
-                            '2025.01.19 - 2025.01.20',
-                            Icons.location_city,
-                            true,
-                          ),
-                          _buildTravelItem(
-                            context,
-                            '부산 여행',
-                            '2025.01.10 - 2025.01.12',
-                            Icons.beach_access,
-                            false,
-                          ),
-                          _buildTravelItem(
-                            context,
-                            '제주도 여행',
-                            '2024.12.24 - 2024.12.27',
-                            Icons.landscape,
-                            false,
-                          ),
-                        ],
+                            trip,
+                            isActive,
+                          );
+                        },
                       ),
                     ),
 
@@ -121,11 +116,20 @@ class TravelListSidebar extends StatelessWidget {
 
   Widget _buildTravelItem(
     BuildContext context,
-    String title,
-    String date,
-    IconData icon,
+    TripPlan trip,
     bool isActive,
   ) {
+    final DateFormat formatter = DateFormat('yyyy.MM.dd');
+    final String dateRange = '${formatter.format(trip.startDate)} - ${formatter.format(trip.endDate)}';
+    
+    // A simple way to get an icon from the destination
+    IconData icon = Icons.location_city;
+    if (trip.destination.contains('해변') || trip.destination.contains('바다')) {
+      icon = Icons.beach_access;
+    } else if (trip.destination.contains('산') || trip.destination.contains('제주')) {
+      icon = Icons.landscape;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -146,7 +150,7 @@ class TravelListSidebar extends StatelessWidget {
           ),
         ),
         title: Text(
-          title,
+          trip.title,
           style: TextStyle(
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
             color: isActive
@@ -155,14 +159,14 @@ class TravelListSidebar extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          date,
+          dateRange,
           style: TextStyle(
             fontSize: 12,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         onTap: () {
-          // Switch travel logic
+          onTripSelected(trip);
           onClose();
         },
         shape: RoundedRectangleBorder(

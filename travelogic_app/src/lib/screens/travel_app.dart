@@ -110,7 +110,6 @@ class _TravelAppState extends State<TravelApp> {
     );
   }
 
-
   // 기존의 다른 핸들러 함수들은 그대로 유지
   void _handleTabChange(TabType tab) {
     setState(() {
@@ -240,6 +239,7 @@ class _TravelAppState extends State<TravelApp> {
                           onRecordTap: _handleRecordTap,
                           onRecordDelete: _handleRecordDelete,
                         ),
+
                 ),
               ],
             ),

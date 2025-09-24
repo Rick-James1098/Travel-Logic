@@ -360,7 +360,6 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                     ),
                     const SizedBox(height: 24),
                   ],
-
                   // Transport Type Selection
                   if (_selectedType == TravelRecordType.transport) ...[
                     const Text(

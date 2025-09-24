@@ -76,12 +76,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _editTrip(TripPlan trip) {
+  /*void _editTrip(TripPlan trip) {
     setState(() {
       _editingTrip = trip;
       _isEditModalOpen = true;
     });
-  }
+  }*/
 
   void _handleSaveTrip(TripPlan trip) {
     setState(() {
@@ -128,6 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onProfileClick() {
+    setState(() {
+      _currentNavIndex = 3;
+    });
     // TODO: Navigate to profile page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -138,6 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNotificationClick() {
+    setState(() {
+      _currentNavIndex = 4;
+    });
     // TODO: Navigate to notifications page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

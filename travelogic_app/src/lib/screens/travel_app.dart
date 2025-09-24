@@ -57,9 +57,7 @@ class _TravelAppState extends State<TravelApp> {
 
   void _handleUpdateRecord(TravelRecord updatedRecord) {
     setState(() {
-
       final index = _records.indexWhere((r) => r.id == updatedRecord.id);
-
       if (index != -1) {
         _records[index] = updatedRecord;
       }

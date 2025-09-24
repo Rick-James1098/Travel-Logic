@@ -8,8 +8,9 @@ import '../widgets/floating_action_button.dart';
 import '../widgets/detailed_add_record_modal.dart';
 import '../widgets/travel_list_sidebar.dart';
 import '../widgets/travel_top_tabs.dart';
-import '../widgets/RecordDetailPage.dart';
-import 'package:travel_record_app/models/tab_type.dart'; // 실제 경로에 맞게 수정해주세요.
+// import '../widgets/RecordDetailPage.dart'; // 더 이상 사용하지 않음
+import '../widgets/RecordDetailPage.dart'; // 새로 만든 상세 정보 모달 임포트
+import 'package:travel_record_app/models/tab_type.dart';
 
 class TravelApp extends StatefulWidget {
   final int currentNavIndex;
@@ -54,38 +55,35 @@ class _TravelAppState extends State<TravelApp> {
     });
   }
 
-  // ✨ 2. 누락되었던 _handleUpdateRecord 함수 정의 추가
   void _handleUpdateRecord(TravelRecord updatedRecord) {
     setState(() {
-      // 리스트에서 수정할 레코드의 인덱스를 찾습니다.
       final index = _records.indexWhere((r) => r.id == updatedRecord.id);
-      // 인덱스를 찾았다면, 해당 위치의 레코드를 새로운 레코드로 교체합니다.
       if (index != -1) {
         _records[index] = updatedRecord;
       }
     });
   }
 
-  // ✨ 1. 레코드 카드 탭을 처리하는 함수 추가
-  void _handleRecordTap(TravelRecord record) async {
-    // 상세 페이지로 이동하고, 결과가 돌아올 때까지 기다림 (await)
-    final updatedRecord = await Navigator.push<TravelRecord>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecordDetailPage(record: record),
-      ),
+  // --- ⬇️ 이 부분이 수정되었습니다 ⬇️ ---
+  // 레코드 카드를 탭했을 때, 페이지 이동 대신 상세 정보 모달을 띄웁니다.
+  void _handleRecordTap(TravelRecord record) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // 이전에 만든 RecordDetailModal 위젯을 여기서 사용합니다.
+        return RecordDetailModal(
+          initialRecord: record,
+          onClose: () => Navigator.of(context).pop(),
+          // 모달 안에서 수정이 일어나면, _handleUpdateRecord 함수를 호출해
+          // 메인 리스트의 데이터를 실시간으로 업데이트합니다.
+          onRecordUpdated: _handleUpdateRecord,
+        );
+      },
     );
-
-    // 상세 페이지에서 수정된 데이터(updatedRecord)를 돌려받았다면
-    // 메인 리스트의 상태를 업데이트함
-    if (updatedRecord != null) {
-      _handleUpdateRecord(updatedRecord);
-    }
   }
+  // --- ⬆️ 여기까지 수정되었습니다 ⬆️ ---
 
-  // ✨ 2. 레코드 삭제를 처리하는 함수 추가
   void _handleRecordDelete(TravelRecord recordToDelete) {
-    // 삭제 확인 다이얼로그 표시
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -109,7 +107,6 @@ class _TravelAppState extends State<TravelApp> {
       ),
     );
   }
-
 
   // 기존의 다른 핸들러 함수들은 그대로 유지
   void _handleTabChange(TabType tab) {
@@ -213,7 +210,7 @@ class _TravelAppState extends State<TravelApp> {
                   child: FilteredTimeline(
                     records: _records,
                     filterType: _activeTab == TabType.all ? null : _activeTab,
-                    // ✨ 3. 생성한 핸들러 함수들을 FilteredTimeline 위젯에 전달
+                    // 수정된 _handleRecordTap 함수를 FilteredTimeline 위젯에 전달합니다.
                     onRecordTap: _handleRecordTap,
                     onRecordDelete: _handleRecordDelete,
                   ),

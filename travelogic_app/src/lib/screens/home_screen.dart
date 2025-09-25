@@ -6,6 +6,7 @@ import '../widgets/home_header.dart';
 import '../widgets/home_bottom_navigation.dart';
 import '../widgets/trip_edit_modal.dart';
 import 'travel_app.dart';
+import 'my_trips_screen.dart'; // Import the new screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -81,30 +82,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleTripSelected(TripPlan trip) {
+    // This function is now only for handling selection from the sidebar inside TravelApp
     setState(() {
       _activeTrip = trip;
     });
-    // When a trip is selected from the sidebar, we pop the current
-    // TravelApp screen and push a new one for the selected trip.
     Navigator.of(context).pop(); // Pop the current TravelApp
     _navigateToMyTravel(selectedTrip: trip); // Push new one
   }
 
-  void _navigateToMyTravel({TripPlan? selectedTrip}) async { // Add async
+  void _navigateToMyTravel({TripPlan? selectedTrip}) async {
     final tripToShow = selectedTrip ?? _activeTrip;
     if (tripToShow == null) {
-      // Handle case where there are no trips
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('표시할 여행 계획이 없습니다.')),
       );
       return;
     }
 
-    // Await the result from TravelApp
     final updatedRecords = await Navigator.of(context).push<List<TravelRecord>>(
       MaterialPageRoute(
         builder: (context) => TravelApp(
-          currentNavIndex: 0,
+          currentNavIndex: 0, // Keep this as 0 for 'My Travel'
           tripPlans: _upcomingTrips,
           tripPlan: tripToShow,
           activeTripId: tripToShow.id,
@@ -113,14 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    // If TravelApp returned updated records, update the master list
     if (updatedRecords != null) {
       setState(() {
         final tripIndex = _upcomingTrips.indexWhere((t) => t.id == tripToShow.id);
         if (tripIndex != -1) {
-          // Use copyWith to create a new TripPlan object with the updated records
           _upcomingTrips[tripIndex] = _upcomingTrips[tripIndex].copyWith(records: updatedRecords);
-          // Also update the active trip reference if it's the one being edited
           if (_activeTrip?.id == tripToShow.id) {
             _activeTrip = _upcomingTrips[tripIndex];
           }
@@ -136,20 +131,26 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Function to handle adding a new trip
+  void _addTrip() {
+    setState(() {
+      _editingTrip = null; // Ensure we are adding, not editing
+      _isEditModalOpen = true;
+    });
+  }
+
   void _handleSaveTrip(TripPlan trip) {
     setState(() {
       if (_editingTrip != null) {
-        // Edit existing trip
         final index = _upcomingTrips.indexWhere((t) => t.id == trip.id);
         if (index != -1) {
           _upcomingTrips[index] = trip;
         }
       } else {
-        // Add new trip
         _upcomingTrips.add(trip);
       }
-      // Sort trips by start date
       _upcomingTrips.sort((a, b) => a.startDate.compareTo(b.startDate));
+      _isEditModalOpen = false; // Close modal on save
     });
   }
 
@@ -157,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_editingTrip != null) {
       setState(() {
         _upcomingTrips.removeWhere((t) => t.id == _editingTrip!.id);
+        _isEditModalOpen = false; // Close modal on delete
       });
     }
   }
@@ -171,7 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentNavIndex = 2;
     });
-    // TODO: Navigate to settings page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('설정 페이지는 곧 업데이트될 예정입니다.'),
@@ -181,7 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onProfileClick() {
-    // TODO: Navigate to profile page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('프로필 페이지는 곧 업데이트될 예정입니다.'),
@@ -191,7 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNotificationClick() {
-    // TODO: Navigate to notifications page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('알림 페이지는 곧 업데이트될 예정입니다.'),
@@ -200,137 +199,141 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMainContent() {
+    final upcomingEvents = _getSortedUpcomingEvents();
+    return Column(
+      children: [
+        HomeHeader(
+          onProfileClick: _onProfileClick,
+          onNotificationClick: _onNotificationClick,
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '안녕하세요! 👋',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onBackground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '다가오는 일정을 확인해보세요',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (upcomingEvents.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    '다가오는 일정',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: upcomingEvents.length,
+                    itemBuilder: (context, index) {
+                      final event = upcomingEvents[index];
+                      return _UpcomingEventCard(event: event);
+                    },
+                  ),
+                ),
+              ] else ...[
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_busy,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '예정된 일정이 없습니다',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '새로운 여행을 계획해보세요!',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final upcomingEvents = _getSortedUpcomingEvents();
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-
-      // Bottom Navigation
       bottomNavigationBar: HomeBottomNavigation(
         currentIndex: _currentNavIndex,
         onMyTravelClick: () {
           setState(() {
             _currentNavIndex = 0;
           });
-          _navigateToMyTravel();
         },
         onHomeClick: _onHomeClick,
         onSettingsClick: _onSettingsClick,
       ),
-
       body: Stack(
         children: [
           SafeArea(
-            child: Column(
+            child: IndexedStack(
+              index: _currentNavIndex,
               children: [
-                // Header
-                HomeHeader(
-                  onProfileClick: _onProfileClick,
-                  onNotificationClick: _onNotificationClick,
+                // My Trips Screen (Index 0)
+                MyTripsScreen(
+                  upcomingTrips: _upcomingTrips,
+                  onTripSelected: (trip) {
+                    // When a trip is selected, navigate to the detailed view
+                    _navigateToMyTravel(selectedTrip: trip);
+                  },
+                  onAddTrip: _addTrip, // Pass the add trip function
                 ),
-
-                // Main content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Welcome section
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '안녕하세요! 👋',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onBackground,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '다가오는 일정을 확인해보세요',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Upcoming events section
-                      if (upcomingEvents.isNotEmpty) ...[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            '다가오는 일정',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onBackground,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Vertical event list
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: upcomingEvents.length,
-                            itemBuilder: (context, index) {
-                              final event = upcomingEvents[index];
-                              return _UpcomingEventCard(event: event);
-                            },
-                          ),
-                        ),
-                      ] else ...[
-                        // Empty state
-                        Expanded(
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.event_busy,
-                                  size: 64,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  '예정된 일정이 없습니다',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '새로운 여행을 계획해보세요!',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
+                // Home Screen (Index 1)
+                _buildMainContent(),
+                // Settings Screen (Index 2) - Placeholder
+                const Center(child: Text("설정 화면")),
               ],
             ),
           ),
-
-          // Edit Modal
           if (_isEditModalOpen)
             TripEditModal(
               trip: _editingTrip,
@@ -385,3 +388,5 @@ class _UpcomingEventCard extends StatelessWidget {
     );
   }
 }
+
+

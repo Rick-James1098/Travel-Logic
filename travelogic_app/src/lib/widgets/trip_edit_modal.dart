@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart'; // Import uuid package
 import '../models/trip_plan.dart';
 
 class TripEditModal extends StatefulWidget {
@@ -82,9 +83,9 @@ class _TripEditModalState extends State<TripEditModal> {
   }
 
   void _handleSave() {
-    if (_titleController.text.trim().isEmpty || 
+    if (_titleController.text.trim().isEmpty ||
         _destinationController.text.trim().isEmpty ||
-        _startDate == null || 
+        _startDate == null ||
         _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('모든 필수 항목을 입력해주세요.')),
@@ -93,7 +94,7 @@ class _TripEditModalState extends State<TripEditModal> {
     }
 
     final trip = TripPlan(
-      id: widget.trip?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.trip?.id ?? const Uuid().v4(), // Use uuid for new trips
       title: _titleController.text.trim(),
       destination: _destinationController.text.trim(),
       startDate: _startDate!,
@@ -107,7 +108,7 @@ class _TripEditModalState extends State<TripEditModal> {
     );
 
     widget.onSave(trip);
-    widget.onClose();
+    // widget.onClose(); // This will be handled in home_screen.dart
   }
 
   void _handleDelete() {
@@ -125,7 +126,7 @@ class _TripEditModalState extends State<TripEditModal> {
             onPressed: () {
               Navigator.of(context).pop();
               widget.onDelete?.call();
-              widget.onClose();
+              // widget.onClose(); // This will be handled in home_screen.dart
             },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
@@ -332,7 +333,7 @@ class _TripEditModalState extends State<TripEditModal> {
                   controller: _descriptionController,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    hintText: '여행에 대한 설명을 입력하세요...',
+                    hintText: '여행에 대한 설명을 입력하세요...', 
                     border: OutlineInputBorder(),
                   ),
                 ),

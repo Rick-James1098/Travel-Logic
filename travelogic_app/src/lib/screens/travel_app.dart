@@ -11,6 +11,7 @@ import '../widgets/travel_top_tabs.dart';
 import '../widgets/RecordDetailPage.dart'; // 새로 만든 상세 정보 모달 임포트
 import 'package:travel_record_app/models/tab_type.dart';
 import 'package:travel_record_app/screens/home_screen.dart';
+import 'package:travel_record_app/screens/settings_screen.dart';
 
 class TravelApp extends StatefulWidget {
   final int currentNavIndex;
@@ -141,14 +142,9 @@ class _TravelAppState extends State<TravelApp> {
   }
 
   void _onSettingsClick() {
-    setState(() {
-      _currentNavIndex = 2;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('설정 페이지는 곧 업데이트될 예정입니다.'),
-        duration: Duration(seconds: 2),
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
     );
   }
 

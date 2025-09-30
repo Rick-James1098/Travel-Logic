@@ -7,6 +7,7 @@ import '../widgets/home_bottom_navigation.dart';
 import '../widgets/trip_edit_modal.dart';
 import 'travel_app.dart';
 import 'my_trips_screen.dart'; // Import the new screen
+import 'settings_screen.dart'; // Import the new settings screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -330,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Home Screen (Index 1)
                 _buildMainContent(),
                 // Settings Screen (Index 2) - Placeholder
-                const Center(child: Text("설정 화면")),
+                const SettingsScreen(),
               ],
             ),
           ),

@@ -192,8 +192,8 @@ class _TravelAppState extends State<TravelApp> {
                           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                           textAlign: TextAlign.center,
                         ),
-                      ),
-                      IconButton(onPressed: _handleSettingsClick, icon: const Icon(Icons.settings)),
+                      )
+                      //IconButton(onPressed: _handleSettingsClick, icon: const Icon(Icons.settings)),
                     ],
                   ),
                 ),
@@ -248,7 +248,7 @@ class _TravelAppState extends State<TravelApp> {
               onSave: _handleAddRecord,
             ),
 
-          // Settings Modal
+          /*// Settings Modal
           if (_isSettingsOpen)
             Container(
               color: Colors.black54,
@@ -280,7 +280,7 @@ class _TravelAppState extends State<TravelApp> {
                   ),
                 ),
               ),
-            ),
+            ),*/
 
           // Sidebar
           if (_isSidebarOpen)

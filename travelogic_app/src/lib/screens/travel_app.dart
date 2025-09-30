@@ -8,9 +8,9 @@ import '../widgets/floating_action_button.dart';
 import '../widgets/detailed_add_record_modal.dart';
 import '../widgets/travel_list_sidebar.dart';
 import '../widgets/travel_top_tabs.dart';
-// import '../widgets/RecordDetailPage.dart'; // 더 이상 사용하지 않음
 import '../widgets/RecordDetailPage.dart'; // 새로 만든 상세 정보 모달 임포트
 import 'package:travel_record_app/models/tab_type.dart';
+import 'package:travel_record_app/screens/home_screen.dart';
 
 class TravelApp extends StatefulWidget {
   final int currentNavIndex;
@@ -129,13 +129,15 @@ class _TravelAppState extends State<TravelApp> {
   }
 
   void _onMyTravelClick() {
-    setState(() {
-      _currentNavIndex = 0;
-    });
+    Navigator.of(context).pop();
   }
 
   void _onHomeClick() {
-    Navigator.of(context).pop(_records);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      (Route<dynamic> route) => false,
+    );
   }
 
   void _onSettingsClick() {

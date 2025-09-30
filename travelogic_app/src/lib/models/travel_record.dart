@@ -1,5 +1,5 @@
 enum TravelRecordType {
-  destination('destination', '장소'),
+  destination('destination', '숙소'),
   transport('transport', '교통'),
   activity('activity', '활동');
 

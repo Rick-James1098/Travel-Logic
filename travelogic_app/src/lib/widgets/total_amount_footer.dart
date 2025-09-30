@@ -21,7 +21,7 @@ class TotalAmountFooter extends StatelessWidget {
       case TabType.transport:
         return '교통수단';
       case TabType.activity:
-        return '액티비티';
+        return '활동';
       case TabType.all:
       case null:
         return '전체';

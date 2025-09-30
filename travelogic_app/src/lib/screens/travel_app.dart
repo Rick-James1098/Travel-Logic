@@ -183,17 +183,18 @@ class _TravelAppState extends State<TravelApp> {
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      IconButton(onPressed: _handleMenuClick, icon: const Icon(Icons.menu)),
-                      Expanded(
-                        child: Text(
-                          widget.tripPlan?.title ?? '내 여행',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                      //IconButton(onPressed: _handleSettingsClick, icon: const Icon(Icons.settings)),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(onPressed: _handleMenuClick, icon: const Icon(Icons.menu)),
+                      ),
+                      Text(
+                        widget.tripPlan?.title ?? '내 여행',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 ),
@@ -209,7 +210,7 @@ class _TravelAppState extends State<TravelApp> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                '새로운 여행을 계획해보세요!',
+                                '일정을 기록해보세요!!',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w500,
@@ -224,7 +225,7 @@ class _TravelAppState extends State<TravelApp> {
                                   });
                                 },
                                 icon: const Icon(Icons.add),
-                                label: const Text('새 여행 기록하기'),
+                                label: const Text('새 일정 기록하기'),
                               ),
                             ],
                           ),

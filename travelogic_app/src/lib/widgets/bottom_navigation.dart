@@ -52,7 +52,7 @@ class CustomBottomNavigation extends StatelessWidget {
                 context,
                 TabType.activity,
                 Icons.camera_alt,
-                '액티비티',
+                '활동',
               ),
             ],
           ),

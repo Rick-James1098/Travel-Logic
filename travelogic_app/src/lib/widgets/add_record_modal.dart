@@ -21,7 +21,7 @@ class _AddRecordModalState extends State<AddRecordModal> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _amountController = TextEditingController();
-  TimeOfDay? _selectedTime;
+  DateTime? _selectedDateTime;
 
   @override
   void dispose() {
@@ -33,12 +33,9 @@ class _AddRecordModalState extends State<AddRecordModal> {
   }
 
   void _handleSave() {
-    if (_titleController.text.trim().isEmpty || _selectedTime == null) {
+    if (_titleController.text.trim().isEmpty || _selectedDateTime == null) {
       return;
     }
-
-    final timeString = '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
-    final currentDate = DateTime.now().toIso8601String().split('T')[0];
 
     final record = TravelRecord(
       id: '', // Will be set by parent
@@ -46,8 +43,8 @@ class _AddRecordModalState extends State<AddRecordModal> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       location: _locationController.text.trim(),
-      time: timeString,
-      date: currentDate,
+      time: '${_selectedDateTime!.hour.toString().padLeft(2, '0')}:${_selectedDateTime!.minute.toString().padLeft(2, '0')}',
+      date: _selectedDateTime!.toIso8601String().split('T')[0],
       amount: int.tryParse(_amountController.text) ?? 0,
     );
 
@@ -55,16 +52,30 @@ class _AddRecordModalState extends State<AddRecordModal> {
     widget.onClose();
   }
 
-  void _selectTime() async {
+  void _selectDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateTime ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (date == null) return;
+
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime ?? DateTime.now()),
     );
-    if (time != null) {
-      setState(() {
-        _selectedTime = time;
-      });
-    }
+    if (time == null) return;
+
+    setState(() {
+      _selectedDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
   }
 
   @override
@@ -167,15 +178,16 @@ class _AddRecordModalState extends State<AddRecordModal> {
               TextField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  hintText: '예: 경복궁 방문',
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Time
+              const SizedBox(height: 16),
+
+              // Date & Time
               const Text(
-                '시간 *',
+                '날짜 및 시간 *',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -183,7 +195,7 @@ class _AddRecordModalState extends State<AddRecordModal> {
               ),
               const SizedBox(height: 8),
               GestureDetector(
-                onTap: _selectTime,
+                onTap: _selectDateTime,
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -195,16 +207,16 @@ class _AddRecordModalState extends State<AddRecordModal> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.access_time,
+                        Icons.calendar_today,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _selectedTime != null
-                            ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
-                            : '시간 선택',
+                        _selectedDateTime != null
+                            ? '${_selectedDateTime!.year}-${_selectedDateTime!.month.toString().padLeft(2, '0')}-${_selectedDateTime!.day.toString().padLeft(2, '0')} ${_selectedDateTime!.hour.toString().padLeft(2, '0')}:${_selectedDateTime!.minute.toString().padLeft(2, '0')}'
+                            : '날짜 및 시간 선택',
                         style: TextStyle(
-                          color: _selectedTime != null
+                          color: _selectedDateTime != null
                               ? Theme.of(context).colorScheme.onSurface
                               : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -227,7 +239,6 @@ class _AddRecordModalState extends State<AddRecordModal> {
               TextField(
                 controller: _locationController,
                 decoration: const InputDecoration(
-                  hintText: '예: 서울특별시 종로구',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -282,7 +293,7 @@ class _AddRecordModalState extends State<AddRecordModal> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _titleController.text.trim().isNotEmpty && _selectedTime != null
+                      onPressed: _titleController.text.trim().isNotEmpty && _selectedDateTime != null
                           ? _handleSave
                           : null,
                       child: const Text('저장'),

@@ -33,7 +33,7 @@ class TravelTopTabs extends StatelessWidget {
           const SizedBox(width: 8),
           _buildTab(context, TabType.transport, '교통', Icons.directions_car),
           const SizedBox(width: 8),
-          _buildTab(context, TabType.activity, '액티비티', Icons.camera_alt),
+          _buildTab(context, TabType.activity, '활동', Icons.camera_alt),
         ],
       ),
     );

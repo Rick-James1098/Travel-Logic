@@ -1,5 +1,4 @@
 import 'travel_record.dart';
-import 'trip_event.dart';
 
 class TripPlan {
   final String id;
@@ -11,7 +10,6 @@ class TripPlan {
   final String description;
   final int estimatedBudget;
   final bool isCompleted;
-  final List<TripEvent> events;
   final List<TravelRecord> records;
 
   TripPlan({
@@ -24,7 +22,6 @@ class TripPlan {
     required this.description,
     required this.estimatedBudget,
     this.isCompleted = false,
-    this.events = const [],
     this.records = const [],
   });
 
@@ -38,7 +35,6 @@ class TripPlan {
     String? description,
     int? estimatedBudget,
     bool? isCompleted,
-    List<TripEvent>? events,
     List<TravelRecord>? records,
   }) {
     return TripPlan(
@@ -51,7 +47,6 @@ class TripPlan {
       description: description ?? this.description,
       estimatedBudget: estimatedBudget ?? this.estimatedBudget,
       isCompleted: isCompleted ?? this.isCompleted,
-      events: events ?? this.events,
       records: records ?? this.records,
     );
   }
@@ -64,5 +59,34 @@ class TripPlan {
 
   int get tripDuration {
     return endDate.difference(startDate).inDays + 1;
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'destination': destination,
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate.toIso8601String(),
+      'imageUrl': imageUrl,
+      'description': description,
+      'estimatedBudget': estimatedBudget,
+      'isCompleted': isCompleted ? 1 : 0,
+    };
+  }
+
+  factory TripPlan.fromMap(Map<String, dynamic> map) {
+    return TripPlan(
+      id: map['id'],
+      title: map['title'],
+      destination: map['destination'],
+      startDate: DateTime.parse(map['startDate']),
+      endDate: DateTime.parse(map['endDate']),
+      imageUrl: map['imageUrl'],
+      description: map['description'],
+      estimatedBudget: map['estimatedBudget'],
+      isCompleted: map['isCompleted'] == 1,
+      records: [], // Records should be loaded separately
+    );
   }
 }

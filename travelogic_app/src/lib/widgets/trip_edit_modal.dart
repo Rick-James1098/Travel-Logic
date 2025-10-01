@@ -7,14 +7,12 @@ class TripEditModal extends StatefulWidget {
   final TripPlan? trip;
   final VoidCallback onClose;
   final Function(TripPlan) onSave;
-  final VoidCallback? onDelete;
 
   const TripEditModal({
     super.key,
     this.trip,
     required this.onClose,
     required this.onSave,
-    this.onDelete,
   });
 
   @override
@@ -55,7 +53,7 @@ class _TripEditModalState extends State<TripEditModal> {
     final date = await showDatePicker(
       context: context,
       initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      firstDate: DateTime(2000),
       lastDate: DateTime(2030),
     );
     if (date != null) {
@@ -72,7 +70,7 @@ class _TripEditModalState extends State<TripEditModal> {
     final date = await showDatePicker(
       context: context,
       initialDate: _endDate ?? _startDate ?? DateTime.now(),
-      firstDate: _startDate ?? DateTime.now(),
+      firstDate: _startDate ?? DateTime(2000),
       lastDate: DateTime(2030),
     );
     if (date != null) {
@@ -103,7 +101,6 @@ class _TripEditModalState extends State<TripEditModal> {
       description: _descriptionController.text.trim(),
       estimatedBudget: int.tryParse(_budgetController.text) ?? 0,
       isCompleted: widget.trip?.isCompleted ?? false,
-      events: widget.trip?.events ?? [],
       records: widget.trip?.records ?? [],
     );
 
@@ -111,32 +108,7 @@ class _TripEditModalState extends State<TripEditModal> {
     // widget.onClose(); // This will be handled in home_screen.dart
   }
 
-  void _handleDelete() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('여행 삭제'),
-        content: const Text('이 여행을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              widget.onDelete?.call();
-              // widget.onClose(); // This will be handled in home_screen.dart
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
-    );
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -168,15 +140,6 @@ class _TripEditModalState extends State<TripEditModal> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Spacer(),
-                    if (isEdit)
-                      IconButton(
-                        onPressed: _handleDelete,
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: 24),

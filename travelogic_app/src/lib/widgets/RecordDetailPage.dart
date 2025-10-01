@@ -44,6 +44,7 @@ class _RecordDetailModalState extends State<RecordDetailModal> {
         return DetailedAddRecordModal(
           recordToEdit: _currentRecord,
           onClose: () => Navigator.of(dialogContext).pop(),
+          tripPlanId: _currentRecord.tripPlanId,
           onSave: (updatedRecord) {
             // 1. 메인 리스트의 데이터를 업데이트합니다. (가장 중요)
             widget.onRecordUpdated(updatedRecord);

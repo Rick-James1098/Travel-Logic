@@ -1,24 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:travel_record_app/helpers/database_helper.dart';
 import '../models/trip_plan.dart';
 
-class TravelListSidebar extends StatelessWidget {
+class TravelListSidebar extends StatefulWidget {
   final VoidCallback onClose;
-  final List<TripPlan> tripPlans;
   final Function(TripPlan) onTripSelected;
+  final VoidCallback onAddTrip;
   final String? activeTripId;
 
   const TravelListSidebar({
     super.key,
     required this.onClose,
-    required this.tripPlans,
     required this.onTripSelected,
+    required this.onAddTrip,
     this.activeTripId,
   });
 
   @override
+  State<TravelListSidebar> createState() => _TravelListSidebarState();
+}
+
+class _TravelListSidebarState extends State<TravelListSidebar> {
+  List<TripPlan> _tripPlans = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTrips();
+  }
+
+  Future<void> _loadTrips() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final dbHelper = DatabaseHelper();
+    final tripPlans = await dbHelper.getTripPlans();
+    List<TripPlan> tripsWithRecords = [];
+
+    for (var trip in tripPlans) {
+      final records = await dbHelper.getTravelRecords(trip.id);
+      tripsWithRecords.add(trip.copyWith(records: records));
+    }
+
+    setState(() {
+      _tripPlans = tripsWithRecords;
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onClose,
+      onTap: widget.onClose,
       child: Container(
         color: Colors.black54,
         child: Align(
@@ -64,7 +98,7 @@ class TravelListSidebar extends StatelessWidget {
                           ),
                           const Spacer(),
                           IconButton(
-                            onPressed: onClose,
+                            onPressed: widget.onClose,
                             icon: const Icon(Icons.close),
                           ),
                         ],
@@ -73,20 +107,22 @@ class TravelListSidebar extends StatelessWidget {
 
                     // Travel List
                     Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: tripPlans.length,
-                        itemBuilder: (context, index) {
-                          final trip = tripPlans[index];
-                          final bool isActive = trip.id == activeTripId;
-                          return _buildTravelItem(
-                            context,
-                            trip,
-                            Icons.location_city, // Placeholder icon
-                            isActive,
-                          );
-                        },
-                      ),
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _tripPlans.length,
+                              itemBuilder: (context, index) {
+                                final trip = _tripPlans[index];
+                                final bool isActive = trip.id == widget.activeTripId;
+                                return _buildTravelItem(
+                                  context,
+                                  trip,
+                                  Icons.location_city, // Placeholder icon
+                                  isActive,
+                                );
+                              },
+                            ),
                     ),
 
                     // Add New Travel Button
@@ -96,8 +132,8 @@ class TravelListSidebar extends StatelessWidget {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // Add new travel logic
-                            onClose();
+                            widget.onAddTrip(); // Call onAddTrip
+                            widget.onClose();
                           },
                           icon: const Icon(Icons.add),
                           label: const Text('새 여행 추가'),
@@ -161,7 +197,7 @@ class TravelListSidebar extends StatelessWidget {
           ),
         ),
         onTap: () {
-          onTripSelected(trip);
+          widget.onTripSelected(trip);
         },
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

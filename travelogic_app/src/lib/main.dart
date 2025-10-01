@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:travel_record_app/helpers/database_helper.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseHelper().database;
   runApp(const MyApp());
 }
 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:travel_record_app/helpers/database_helper.dart';
 import '../models/travel_record.dart';
 import '../models/trip_plan.dart';
-import '../models/trip_event.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_bottom_navigation.dart';
 import '../widgets/trip_edit_modal.dart';
@@ -20,60 +21,60 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 1; // Home is selected by default
   bool _isEditModalOpen = false;
   TripPlan? _editingTrip;
-  TripPlan? _activeTrip;
+  List<TripPlan> _upcomingTrips = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    if (_upcomingTrips.isNotEmpty) {
-      _activeTrip = _upcomingTrips.first;
-    }
+    _loadTrips();
   }
 
-  List<TripPlan> _upcomingTrips = [
-    TripPlan(
-      id: '1',
-      title: '제주도 여행',
-      destination: '제주특별자치도',
-      startDate: DateTime.now().add(const Duration(days: 5)),
-      endDate: DateTime.now().add(const Duration(days: 8)),
-      imageUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43',
-      description: '한라산 등반과 해변 여행을 즐기는 3박 4일 여행',
-      estimatedBudget: 450000,
-      events: [
-        TripEvent(title: '한라산 등반', date: DateTime.now().add(const Duration(days: 6)), description: '성판악 코스'),
-        TripEvent(title: '해변에서 휴식', date: DateTime.now().add(const Duration(days: 7)), description: '협재 해수욕장'),
-      ],
-      records: [
-        TravelRecord(id: 'rec1', type: TravelRecordType.transport, title: '흑돼지 전문', description: '제주 흑돼지 맛집에서 저녁 식사', location: '서귀포시', time: '19:00', date: '2025-09-29', amount: 85000,),
-        TravelRecord(id: 'rec2', type: TravelRecordType.destination, title: '오션뷰 호텔', description: '해변가에 위치한 호텔에서 1박', location: '제주시', time: '15:00', date: '2025-09-29', amount: 220000,),
-      ]
-    ),
-    TripPlan(
-      id: '2',
-      title: '부산 맛집 투어',
-      destination: '부산광역시',
-      startDate: DateTime.now().add(const Duration(days: 12)),
-      endDate: DateTime.now().add(const Duration(days: 14)),
-      imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
-      description: '해운대와 감천문화마을을 둘러보는 맛집 투어',
-      estimatedBudget: 280000,
-      events: [
-        TripEvent(title: '돼지국밥 맛집', date: DateTime.now().add(const Duration(days: 12)), description: '쌍둥이돼지국밥'),
-        TripEvent(title: '감천문화마을', date: DateTime.now().add(const Duration(days: 13)), description: '사진 찍기 좋은 곳'),
-      ],
-      records: [
-        TravelRecord(id: 'rec3', type: TravelRecordType.destination, title: '돼지국밥', description: '유명한 돼지국밥집 방문', location: '부산진구', time: '12:30', date: '2025-10-06', amount: 12000,),
-        TravelRecord(id: 'rec4', type: TravelRecordType.activity, title: '해운대 해수욕장', description: '해변 산책 및 구경', location: '해운대구', time: '16:00', date: '2025-10-06', amount: 0,),
-        TravelRecord(id: 'rec5', type: TravelRecordType.transport, title: '씨앗호떡', description: '남포동 명물 씨앗호떡', location: '중구 남포동', time: '18:00', date: '2025-10-06', amount: 2000,),
-      ]
-    ),
-  ];
+  Future<void> _loadTrips() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final dbHelper = DatabaseHelper();
+    final tripPlans = await dbHelper.getTripPlans();
+    List<TripPlan> tripsWithRecords = [];
 
-  List<TripEvent> _getSortedUpcomingEvents() {
-    final allEvents = _upcomingTrips.expand((trip) => trip.events).toList();
-    allEvents.sort((a, b) => a.date.compareTo(b.date));
-    return allEvents;
+    for (var trip in tripPlans) {
+      final records = await dbHelper.getTravelRecords(trip.id);
+      tripsWithRecords.add(trip.copyWith(records: records));
+    }
+
+    setState(() {
+      _upcomingTrips = tripsWithRecords;
+      _upcomingTrips.sort((a, b) => a.startDate.compareTo(b.startDate));
+      _isLoading = false;
+    });
+  }
+
+
+  List<TravelRecord> _getSortedUpcomingRecords() {
+    final allRecords = _upcomingTrips.expand((trip) => trip.records).toList();
+    final now = DateTime.now();
+
+    final upcomingRecords = allRecords.where((record) {
+      try {
+        final recordDateTime = DateTime.parse('${record.date} ${record.time}');
+        return recordDateTime.isAfter(now);
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    upcomingRecords.sort((a, b) {
+      try {
+        final aDateTime = DateTime.parse('${a.date} ${a.time}');
+        final bDateTime = DateTime.parse('${b.date} ${b.time}');
+        return aDateTime.compareTo(bDateTime);
+      } catch (e) {
+        return 0;
+      }
+    });
+
+    return upcomingRecords;
   }
 
   @override
@@ -85,52 +86,31 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleTripSelected(TripPlan trip) {
     // This function is now only for handling selection from the sidebar inside TravelApp
     setState(() {
-      _activeTrip = trip;
+      // _activeTrip = trip; // No longer needed here, TravelApp will manage its own active trip
     });
     Navigator.of(context).pop(); // Pop the current TravelApp
     _navigateToMyTravel(selectedTrip: trip); // Push new one
   }
 
   void _navigateToMyTravel({TripPlan? selectedTrip}) async {
-    final tripToShow = selectedTrip ?? _activeTrip;
-    if (tripToShow == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('표시할 여행 계획이 없습니다.')),
-      );
-      return;
-    }
-
-    final updatedRecords = await Navigator.of(context).push<List<TravelRecord>>(
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => TravelApp(
           currentNavIndex: 0, // Keep this as 0 for 'My Travel'
-          tripPlans: _upcomingTrips,
-          tripPlan: tripToShow,
-          activeTripId: tripToShow.id,
+          tripPlan: selectedTrip, // Pass only the selected trip
           onTripSelected: _handleTripSelected,
         ),
       ),
     );
 
-    if (updatedRecords != null) {
-      setState(() {
-        final tripIndex = _upcomingTrips.indexWhere((t) => t.id == tripToShow.id);
-        if (tripIndex != -1) {
-          _upcomingTrips[tripIndex] = _upcomingTrips[tripIndex].copyWith(records: updatedRecords);
-          if (_activeTrip?.id == tripToShow.id) {
-            _activeTrip = _upcomingTrips[tripIndex];
-          }
-        }
-      });
+    if (result == 'add_trip') {
+      _addTrip();
+    } else {
+      _loadTrips(); // Reload trips after returning from TravelApp
     }
   }
 
-  void _editTrip(TripPlan trip) {
-    setState(() {
-      _editingTrip = trip;
-      _isEditModalOpen = true;
-    });
-  }
+  
 
   // Function to handle adding a new trip
   void _addTrip() {
@@ -140,28 +120,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _handleSaveTrip(TripPlan trip) {
+  void _handleSaveTrip(TripPlan trip) async {
+    final dbHelper = DatabaseHelper();
+    if (_editingTrip != null) {
+      await dbHelper.updateTripPlan(trip);
+    } else {
+      await dbHelper.insertTripPlan(trip);
+    }
+    _loadTrips(); // Reload trips after saving
     setState(() {
-      if (_editingTrip != null) {
-        final index = _upcomingTrips.indexWhere((t) => t.id == trip.id);
-        if (index != -1) {
-          _upcomingTrips[index] = trip;
-        }
-      } else {
-        _upcomingTrips.add(trip);
-      }
-      _upcomingTrips.sort((a, b) => a.startDate.compareTo(b.startDate));
       _isEditModalOpen = false; // Close modal on save
     });
   }
 
-  void _handleDeleteTrip() {
-    if (_editingTrip != null) {
-      setState(() {
-        _upcomingTrips.removeWhere((t) => t.id == _editingTrip!.id);
-        _isEditModalOpen = false; // Close modal on delete
-      });
-    }
+  void _handleDeleteTrip(TripPlan trip) async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.deleteTripPlan(trip.id);
+    _loadTrips(); // Reload trips after deleting
   }
 
   void _onHomeClick() {
@@ -201,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMainContent() {
-    final upcomingEvents = _getSortedUpcomingEvents();
+    final upcomingRecords = _getSortedUpcomingRecords();
     return Column(
       children: [
         HomeHeader(
@@ -236,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              if (upcomingEvents.isNotEmpty) ...[
+              if (upcomingRecords.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -251,10 +226,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 8),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: upcomingEvents.length,
+                    itemCount: upcomingRecords.length,
                     itemBuilder: (context, index) {
-                      final event = upcomingEvents[index];
-                      return _UpcomingEventCard(event: event);
+                      final record = upcomingRecords[index];
+                      return _UpcomingRecordCard(record: record);
                     },
                   ),
                 ),
@@ -322,10 +297,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 // My Trips Screen (Index 0)
                 MyTripsScreen(
                   upcomingTrips: _upcomingTrips,
+                  isLoading: _isLoading,
                   onTripSelected: (trip) {
                     // When a trip is selected, navigate to the detailed view
                     _navigateToMyTravel(selectedTrip: trip);
                   },
+                  onTripDelete: _handleDeleteTrip, // Pass the delete trip function
                   onAddTrip: _addTrip, // Pass the add trip function
                 ),
                 // Home Screen (Index 1)
@@ -344,7 +321,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 });
               },
               onSave: _handleSaveTrip,
-              onDelete: _editingTrip != null ? _handleDeleteTrip : null,
             ),
         ],
       ),
@@ -352,13 +328,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _UpcomingEventCard extends StatelessWidget {
-  final TripEvent event;
+class _UpcomingRecordCard extends StatelessWidget {
+  final TravelRecord record;
 
-  const _UpcomingEventCard({required this.event});
+  const _UpcomingRecordCard({required this.record});
 
   @override
   Widget build(BuildContext context) {
+    final recordDateTime = DateTime.parse('${record.date} ${record.time}');
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -367,7 +344,7 @@ class _UpcomingEventCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              event.title,
+              record.title,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -375,14 +352,14 @@ class _UpcomingEventCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${event.date.year}년 ${event.date.month}월 ${event.date.day}일',
+              '${recordDateTime.year}년 ${recordDateTime.month}월 ${recordDateTime.day}일 ${recordDateTime.hour.toString().padLeft(2, '0')}:${recordDateTime.minute.toString().padLeft(2, '0')}',
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
               ),
             ),
             const SizedBox(height: 8),
-            Text(event.description),
+            Text(record.description),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travel_record_app/helpers/database_helper.dart';
 import '../models/travel_record.dart';
 import '../models/trip_plan.dart';
 import '../widgets/mobile_header.dart';
@@ -16,16 +17,12 @@ import 'package:travel_record_app/screens/settings_screen.dart';
 class TravelApp extends StatefulWidget {
   final int currentNavIndex;
   final TripPlan? tripPlan;
-  final List<TripPlan> tripPlans;
-  final String? activeTripId;
   final Function(TripPlan)? onTripSelected;
 
   const TravelApp({
     super.key,
     this.currentNavIndex = 0,
-    this.tripPlan,
-    required this.tripPlans,
-    this.activeTripId,
+    required this.tripPlan,
     this.onTripSelected,
   });
 
@@ -39,76 +36,88 @@ class _TravelAppState extends State<TravelApp> {
   bool _isSidebarOpen = false;
   bool _isSettingsOpen = false;
   late int _currentNavIndex;
-  late List<TravelRecord> _records;
+  List<TravelRecord> _records = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _currentNavIndex = widget.currentNavIndex;
-    _records = List<TravelRecord>.from(widget.tripPlan?.records ?? []);
+    _loadRecords();
   }
 
-  
-
-  void _handleAddRecord(TravelRecord record) {
+  Future<void> _loadRecords() async {
+    if (widget.tripPlan == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
     setState(() {
-      _records.add(record.copyWith(id: DateTime.now().millisecondsSinceEpoch.toString()));
+      _isLoading = true;
+    });
+    final dbHelper = DatabaseHelper();
+    final records = await dbHelper.getTravelRecords(widget.tripPlan!.id);
+    setState(() {
+      _records = records;
+      _isLoading = false;
     });
   }
 
-  void _handleUpdateRecord(TravelRecord updatedRecord) {
-    setState(() {
-      final index = _records.indexWhere((r) => r.id == updatedRecord.id);
-      if (index != -1) {
-        _records[index] = updatedRecord;
-      }
-    });
+  void _handleAddRecord(TravelRecord record) async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.insertTravelRecord(record);
+    _loadRecords();
   }
 
-  // --- ⬇️ 이 부분이 수정되었습니다 ⬇️ ---
-  // 레코드 카드를 탭했을 때, 페이지 이동 대신 상세 정보 모달을 띄웁니다.
+  void _handleUpdateRecord(TravelRecord updatedRecord) async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.updateTravelRecord(updatedRecord);
+    _loadRecords();
+  }
+
+  void _handleRecordDelete(TravelRecord recordToDelete) async {
+    showDialog(
+      context: context,
+      builder: (ctx) =>
+          AlertDialog(
+            title: const Text('삭제 확인'),
+            content: Text("'${recordToDelete.title}' 기록을 정말로 삭제하시겠습니까?"),
+            actions: [
+              TextButton(
+                child: const Text('취소'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              TextButton(
+                child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                onPressed: () async {
+                  final dbHelper = DatabaseHelper();
+                  await dbHelper.deleteTravelRecord(recordToDelete.id);
+                  _loadRecords();
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+
   void _handleRecordTap(TravelRecord record) {
     showDialog(
       context: context,
       builder: (context) {
-        // 이전에 만든 RecordDetailModal 위젯을 여기서 사용합니다.
         return RecordDetailModal(
           initialRecord: record,
           onClose: () => Navigator.of(context).pop(),
-          // 모달 안에서 수정이 일어나면, _handleUpdateRecord 함수를 호출해
-          // 메인 리스트의 데이터를 실시간으로 업데이트합니다.
-          onRecordUpdated: _handleUpdateRecord,
+          onRecordUpdated: (updatedRecord) {
+            _handleUpdateRecord(updatedRecord);
+            // No need to pop here, as _handleUpdateRecord will reload records and rebuild
+          },
         );
       },
     );
   }
-  // --- ⬆️ 여기까지 수정되었습니다 ⬆️ ---
-
-  void _handleRecordDelete(TravelRecord recordToDelete) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('삭제 확인'),
-        content: Text("'${recordToDelete.title}' 기록을 정말로 삭제하시겠습니까?"),
-        actions: [
-          TextButton(
-            child: const Text('취소'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          TextButton(
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
-            onPressed: () {
-              setState(() {
-                _records.removeWhere((record) => record.id == recordToDelete.id);
-              });
-              Navigator.of(ctx).pop();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
 
   // 기존의 다른 핸들러 함수들은 그대로 유지
   void _handleTabChange(TabType tab) {
@@ -233,7 +242,6 @@ class _TravelAppState extends State<TravelApp> {
                       : FilteredTimeline(
                           records: _records,
                           filterType: _activeTab == TabType.all ? null : _activeTab,
-                          // 수정된 _handleRecordTap 함수를 FilteredTimeline 위젯에 전달합니다.
                           onRecordTap: _handleRecordTap,
                           onRecordDelete: _handleRecordDelete,
                         ),
@@ -247,6 +255,7 @@ class _TravelAppState extends State<TravelApp> {
             DetailedAddRecordModal(
               onClose: () => setState(() => _isAddModalOpen = false),
               onSave: _handleAddRecord,
+              tripPlanId: widget.tripPlan!.id,
             ),
 
           /*// Settings Modal
@@ -286,8 +295,7 @@ class _TravelAppState extends State<TravelApp> {
           // Sidebar
           if (_isSidebarOpen)
             TravelListSidebar(
-              tripPlans: widget.tripPlans, // Pass trip plans
-              activeTripId: widget.activeTripId,
+              activeTripId: widget.tripPlan?.id,
               onTripSelected: (trip) {
                 // When a trip is selected, close the sidebar and call the callback
                 setState(() {
@@ -296,6 +304,9 @@ class _TravelAppState extends State<TravelApp> {
                 widget.onTripSelected?.call(trip);
               },
               onClose: () => setState(() => _isSidebarOpen = false),
+              onAddTrip: () {
+                Navigator.of(context).pop('add_trip');
+              },
             ),
         ],
       ),

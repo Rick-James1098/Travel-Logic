@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../models/travel_record.dart';
 
 class AddRecordModal extends StatefulWidget {
   final VoidCallback onClose;
   final Function(TravelRecord) onSave;
+  final String tripPlanId;
 
   const AddRecordModal({
     super.key,
     required this.onClose,
     required this.onSave,
+    required this.tripPlanId,
   });
 
   @override
@@ -38,7 +41,8 @@ class _AddRecordModalState extends State<AddRecordModal> {
     }
 
     final record = TravelRecord(
-      id: '', // Will be set by parent
+      id: const Uuid().v4(),
+      tripPlanId: widget.tripPlanId,
       type: _selectedType,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),

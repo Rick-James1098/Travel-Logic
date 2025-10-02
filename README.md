@@ -87,5 +87,5 @@ https://www.figma.com/make/AN53TcnmxlmhMQTkwoVEVm/Travel-Logic-Main-Page?node-id
     
  +) travel_app 페이지에서 tripPlan 시간 순 정렬 기능 추가
 
-  메인 페이지에서 travelRecord 선택 시 해당 travelRecord의 상세 정보 확인 기능 추가
+ +) 메인 페이지에서 travelRecord 선택 시 해당 travelRecord의 상세 정보 확인 기능 추가
  

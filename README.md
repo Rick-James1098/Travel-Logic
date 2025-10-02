@@ -89,4 +89,3 @@ https://www.figma.com/make/AN53TcnmxlmhMQTkwoVEVm/Travel-Logic-Main-Page?node-id
 
   메인 페이지에서 travelRecord 선택 시 해당 travelRecord의 상세 정보 확인 기능 추가
  
-    메인 페이지에서 다가오는 일정을 클릭했을 때 해당 travelrecord의 상세정보 확인 기능 추가

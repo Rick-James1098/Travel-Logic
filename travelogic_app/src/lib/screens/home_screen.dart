@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:travel_record_app/helpers/database_helper.dart';
 import '../models/travel_record.dart';
 import '../models/trip_plan.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_bottom_navigation.dart';
 import '../widgets/trip_edit_modal.dart';
+import '../widgets/RecordDetailPage.dart'; // Import the modal
 import 'travel_app.dart';
-import 'my_trips_screen.dart'; // Import the new screen
-import 'settings_screen.dart'; // Import the new settings screen
+import 'my_trips_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentNavIndex = 1; // Home is selected by default
+  int _currentNavIndex = 1;
   bool _isEditModalOpen = false;
   TripPlan? _editingTrip;
   List<TripPlan> _upcomingTrips = [];
@@ -50,6 +50,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _handleRecordUpdate(TravelRecord updatedRecord) {
+    _loadTrips();
+  }
 
   List<TravelRecord> _getSortedUpcomingRecords() {
     final allRecords = _upcomingTrips.expand((trip) => trip.records).toList();
@@ -79,25 +82,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // _pageController.dispose(); // No longer needed
     super.dispose();
   }
 
   void _handleTripSelected(TripPlan trip) {
-    // This function is now only for handling selection from the sidebar inside TravelApp
-    setState(() {
-      // _activeTrip = trip; // No longer needed here, TravelApp will manage its own active trip
-    });
-    Navigator.of(context).pop(); // Pop the current TravelApp
-    _navigateToMyTravel(selectedTrip: trip); // Push new one
+    Navigator.of(context).pop();
+    _navigateToMyTravel(selectedTrip: trip);
   }
 
   void _navigateToMyTravel({TripPlan? selectedTrip}) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => TravelApp(
-          currentNavIndex: 0, // Keep this as 0 for 'My Travel'
-          tripPlan: selectedTrip, // Pass only the selected trip
+          currentNavIndex: 0,
+          tripPlan: selectedTrip,
           onTripSelected: _handleTripSelected,
         ),
       ),
@@ -106,16 +104,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (result == 'add_trip') {
       _addTrip();
     } else {
-      _loadTrips(); // Reload trips after returning from TravelApp
+      _loadTrips();
     }
   }
 
-  
-
-  // Function to handle adding a new trip
   void _addTrip() {
     setState(() {
-      _editingTrip = null; // Ensure we are adding, not editing
+      _editingTrip = null;
       _isEditModalOpen = true;
     });
   }
@@ -127,16 +122,16 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       await dbHelper.insertTripPlan(trip);
     }
-    _loadTrips(); // Reload trips after saving
+    _loadTrips();
     setState(() {
-      _isEditModalOpen = false; // Close modal on save
+      _isEditModalOpen = false;
     });
   }
 
   void _handleDeleteTrip(TripPlan trip) async {
     final dbHelper = DatabaseHelper();
     await dbHelper.deleteTripPlan(trip.id);
-    _loadTrips(); // Reload trips after deleting
+    _loadTrips();
   }
 
   void _onHomeClick() {
@@ -229,7 +224,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: upcomingRecords.length,
                     itemBuilder: (context, index) {
                       final record = upcomingRecords[index];
-                      return _UpcomingRecordCard(record: record);
+                      return _UpcomingRecordCard(
+                        record: record,
+                        onRecordUpdated: _handleRecordUpdate,
+                      );
                     },
                   ),
                 ),
@@ -294,20 +292,16 @@ class _HomeScreenState extends State<HomeScreen> {
             child: IndexedStack(
               index: _currentNavIndex,
               children: [
-                // My Trips Screen (Index 0)
                 MyTripsScreen(
                   upcomingTrips: _upcomingTrips,
                   isLoading: _isLoading,
                   onTripSelected: (trip) {
-                    // When a trip is selected, navigate to the detailed view
                     _navigateToMyTravel(selectedTrip: trip);
                   },
-                  onTripDelete: _handleDeleteTrip, // Pass the delete trip function
-                  onAddTrip: _addTrip, // Pass the add trip function
+                  onTripDelete: _handleDeleteTrip,
+                  onAddTrip: _addTrip,
                 ),
-                // Home Screen (Index 1)
                 _buildMainContent(),
-                // Settings Screen (Index 2) - Placeholder
                 const SettingsScreen(),
               ],
             ),
@@ -330,37 +324,61 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _UpcomingRecordCard extends StatelessWidget {
   final TravelRecord record;
+  final Function(TravelRecord) onRecordUpdated;
 
-  const _UpcomingRecordCard({required this.record});
+  const _UpcomingRecordCard({
+    required this.record,
+    required this.onRecordUpdated,
+  });
 
   @override
   Widget build(BuildContext context) {
     final recordDateTime = DateTime.parse('${record.date} ${record.time}');
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              record.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (dialogContext) {
+              return RecordDetailModal(
+                initialRecord: record,
+                onClose: () => Navigator.of(dialogContext).pop(),
+                onRecordUpdated: (updatedRecord) {
+                  onRecordUpdated(updatedRecord);
+                },
+              );
+            },
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                record.title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${recordDateTime.year}년 ${recordDateTime.month}월 ${recordDateTime.day}일 ${recordDateTime.hour.toString().padLeft(2, '0')}:${recordDateTime.minute.toString().padLeft(2, '0')}',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+              const SizedBox(height: 8),
+              Text(
+                '${recordDateTime.year}년 ${recordDateTime.month}월 ${recordDateTime.day}일 ${recordDateTime.hour.toString().padLeft(2, '0')}:${recordDateTime.minute.toString().padLeft(2, '0')}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(record.description),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                record.description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

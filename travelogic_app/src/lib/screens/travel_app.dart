@@ -159,6 +159,18 @@ class _TravelAppState extends State<TravelApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Create a sorted copy of the records to be displayed.
+    final sortedRecords = List<TravelRecord>.from(_records);
+    sortedRecords.sort((a, b) {
+      try {
+        final aDateTime = DateTime.parse('${a.date} ${a.time}');
+        final bDateTime = DateTime.parse('${b.date} ${b.time}');
+        return aDateTime.compareTo(bDateTime);
+      } catch (e) {
+        return 0; // If parsing fails, maintain original order.
+      }
+    });
+
     return Scaffold(
       floatingActionButton: CustomFloatingActionButton(
         onPressed: () {
@@ -213,7 +225,7 @@ class _TravelAppState extends State<TravelApp> {
 
                 // Content
                 Expanded(
-                  child: _records.isEmpty
+                  child: sortedRecords.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -240,7 +252,7 @@ class _TravelAppState extends State<TravelApp> {
                           ),
                         )
                       : FilteredTimeline(
-                          records: _records,
+                          records: sortedRecords, // Use the sorted list
                           filterType: _activeTab == TabType.all ? null : _activeTab,
                           onRecordTap: _handleRecordTap,
                           onRecordDelete: _handleRecordDelete,

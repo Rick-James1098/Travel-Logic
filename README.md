@@ -17,6 +17,8 @@ https://www.notion.so/Travelogic-Planning-27252813d8cc80e09843f10efde7f8e5?sourc
   
   클래스 초기 구상 - 여행 계획표를 구성하는 정보들의 클래스 초기 버전   
 
+- - -
+
 2025/09/21
   
   AppBar - 좌측 앱 이름(Travelogic), 우측 알림버튼, 프로필 버튼

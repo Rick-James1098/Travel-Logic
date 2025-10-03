@@ -36,7 +36,7 @@ class UpcomingTripCard extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: Container(
+          child: SizedBox(
             height: 200,
             child: Stack(
               children: [

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:travel_record_app/helpers/database_helper.dart';
 import '../models/travel_record.dart';
 import '../models/trip_plan.dart';
-import '../widgets/mobile_header.dart';
 import '../widgets/filtered_timeline.dart';
 import '../widgets/home_bottom_navigation.dart';
 import '../widgets/floating_action_button.dart';
@@ -112,14 +111,12 @@ class _TravelAppState extends State<TravelApp> {
           onClose: () => Navigator.of(context).pop(),
           onRecordUpdated: (updatedRecord) {
             _handleUpdateRecord(updatedRecord);
-            // No need to pop here, as _handleUpdateRecord will reload records and rebuild
           },
         );
       },
     );
   }
 
-  // 기존의 다른 핸들러 함수들은 그대로 유지
   void _handleTabChange(TabType tab) {
     setState(() {
       _activeTab = tab;
@@ -269,40 +266,6 @@ class _TravelAppState extends State<TravelApp> {
               onSave: _handleAddRecord,
               tripPlanId: widget.tripPlan!.id,
             ),
-
-          /*// Settings Modal
-          if (_isSettingsOpen)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('설정', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 16),
-                      Text('설정 기능은 곧 업데이트될 예정입니다.', textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                      const SizedBox(height: 24),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () => setState(() => _isSettingsOpen = false),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 24),
-                            child: Text('닫기'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),*/
 
           // Sidebar
           if (_isSidebarOpen)

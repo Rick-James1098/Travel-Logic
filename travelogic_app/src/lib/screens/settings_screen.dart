@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// 나중에 테마 관리를 위해 enum을 사용할 수 있습니다.
 enum ThemeSetting { light, dark, system }
 
 class SettingsScreen extends StatefulWidget {
@@ -19,8 +18,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('설정'),
-        // IndexedStack 내에서 사용될 경우 뒤로가기 버튼이 자동으로 생기지 않으므로,
-        // Navigator.canPop(context)를 확인하여 뒤로 갈 수 있을 때만 버튼을 표시합니다.
         automaticallyImplyLeading: Navigator.canPop(context),
       ),
       body: ListView(

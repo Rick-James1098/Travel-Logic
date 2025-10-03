@@ -169,7 +169,7 @@ class _TravelListSidebarState extends State<TravelListSidebar> {
           decoration: BoxDecoration(
             color: isActive
                 ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(

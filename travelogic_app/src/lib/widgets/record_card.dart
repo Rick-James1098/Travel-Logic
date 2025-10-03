@@ -14,10 +14,6 @@ class RecordCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  // _getTypeIcon, _getTypeColor, _buildTransportDetails,
-  // _buildAccommodationDetails, _buildDetailRow 메서드는 기존과 동일합니다.
-  // (아래에 전체 코드가 포함되어 있으니 복사해서 사용하시면 됩니다.)
-
   IconData _getTypeIcon(TravelRecordType type) {
     switch (type) {
       case TravelRecordType.destination:
@@ -44,7 +40,7 @@ class RecordCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -78,7 +74,7 @@ class RecordCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -162,7 +158,7 @@ class RecordCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline.withOpacity(0.2),

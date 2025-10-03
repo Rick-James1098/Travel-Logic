@@ -32,10 +32,7 @@ class _RecordDetailModalState extends State<RecordDetailModal> {
     _currentRecord = widget.initialRecord;
   }
 
-  // --- ⬇️ 이 함수가 수정되었습니다 ⬇️ ---
   void _showEditModal() {
-    // ❗ 문제의 원인이었던 `widget.onClose()` 코드를 여기서 제거합니다.
-    // 이제 상세 모달을 미리 닫지 않습니다.
 
     showDialog(
       context: context,
@@ -136,7 +133,7 @@ class _RecordDetailModalState extends State<RecordDetailModal> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12.0),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

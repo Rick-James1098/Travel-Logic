@@ -10,14 +10,14 @@ import 'total_amount_footer.dart';
 class FilteredTimeline extends StatelessWidget {
   final List<TravelRecord> records;
   final TabType? filterType;
-  final Function(TravelRecord) onRecordTap;      // ✨ 1. 탭 콜백 함수 추가
-  final Function(TravelRecord) onRecordDelete;   // ✨ 2. 삭제 콜백 함수 추가
+  final Function(TravelRecord) onRecordTap;      //  1. 탭 콜백 함수 추가
+  final Function(TravelRecord) onRecordDelete;   //  2. 삭제 콜백 함수 추가
 
   const FilteredTimeline({
     super.key,
     required this.records,
     this.filterType,
-    required this.onRecordTap,      // ✨ 3. 생성자에 콜백 함수를 필수로 받도록 수정
+    required this.onRecordTap,      // 3. 생성자에 콜백 함수를 필수로 받도록 수정
     required this.onRecordDelete,
   });
 

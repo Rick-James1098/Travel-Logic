@@ -332,7 +332,7 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                   // Header
                   Text(
                     _isEditing ? '기록 수정' : '새 기록 추가',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
@@ -357,7 +357,7 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                               margin: const EdgeInsets.only(right: 8),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               decoration: BoxDecoration(
-                                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceVariant,
+                                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline.withOpacity(0.2),
@@ -400,7 +400,7 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<TransportType>(
-                      value: _selectedTransportType,
+                      initialValue: _selectedTransportType,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                       ),
@@ -924,31 +924,6 @@ class _DetailedAddRecordModalState extends State<DetailedAddRecordModal> {
       ],
     );
   }
-
-  //
-  // Widget _buildActivityFields() {
-  //   return Column(
-  //     crossAxisAlignment : CrossAxisAlignment.start,
-  //     children: [
-  //       const Text(
-  //         '내용',
-  //         style: TextStyle(
-  //           fontSize: 16,
-  //           fontWeight: FontWeight.w500,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 16,),
-  //       TextField(
-  //         controller: _descriptionController,
-  //         maxLines: 3,
-  //         decoration: const InputDecoration(
-  //           hintText: '어떤 활동을 하셨나요?',
-  //           border: OutlineInputBorder(),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   IconData _getTypeIcon(TravelRecordType type) {
     switch (type) {
